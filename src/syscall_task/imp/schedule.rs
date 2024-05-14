@@ -4,8 +4,6 @@ use alloc::sync::Arc;
 use axconfig::SMP;
 use axhal::mem::VirtAddr;
 use axprocess::{current_process, current_task, PID2PC, TID2TASK};
-
-// 
 use axtask::{SchedPolicy, SchedStatus};
 
 use crate::{SchedParam, SyscallError, SyscallResult};
