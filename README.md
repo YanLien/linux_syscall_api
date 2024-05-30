@@ -1,5 +1,3 @@
 # Linux_syscall_api
 
-The project is a simple implementation of system calls in posix compliant operating systems. 
-
-
+The project, written by Rust, is a compatibility layer for linux syscalls on different operating systems.
