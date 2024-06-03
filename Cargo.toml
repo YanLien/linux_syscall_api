@@ -7,7 +7,7 @@ authors = ["Youjie Zheng <zyj578335934@gmail.com>"]
 keywords = ["Starry", "linux-syscall"]
 description = "A compatibility layer for linux syscalls on different operating systems written by Rust."
 
-[workspace]
+
 
 [features]
 default = ["monolithic"]
