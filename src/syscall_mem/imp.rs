@@ -376,3 +376,10 @@ pub fn syscall_shmat(args: [usize; 6]) -> SyscallResult {
 
     Ok(addr.as_usize() as isize)
 }
+
+
+/// # mlock
+#[cfg(target_arch = "x86_64")]
+pub fn syscall_mlock(_args: [usize; 6]) -> SyscallResult {
+    Ok(0)
+}
