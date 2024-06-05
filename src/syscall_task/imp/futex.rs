@@ -33,7 +33,7 @@ pub fn futex_requeue(wake_num: u32, move_num: usize, src_addr: VirtAddr, dst_add
     let src_wait_task = futex_wait_task.get_mut(&key).unwrap();
     for _ in 0..wake_num {
         if let Some((task, _)) = src_wait_task.pop_front() {
-            WAIT_FOR_FUTEX.notify_task(false, &task);
+            WAIT_FOR_FUTEX.notify_task(&task);
         } else {
             break;
         }
