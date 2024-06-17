@@ -1,6 +1,6 @@
 //! 文件系统相关系统调用
 
-mod ctype;
+pub mod ctype;
 pub mod imp;
 
 use crate::SyscallResult;
@@ -70,6 +70,7 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         EPOLL_WAIT => syscall_epoll_wait(args),
         PPOLL => syscall_ppoll(args),
         PSELECT6 => syscall_pselect6(args),
+        STATX => syscall_statx(args),
         #[cfg(not(target_arch = "x86_64"))]
         EVENTFD => syscall_eventfd(args),
         #[cfg(target_arch = "x86_64")]
@@ -106,9 +107,11 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         #[cfg(target_arch = "x86_64")]
         CREAT => Err(axerrno::LinuxError::EPERM),
         #[cfg(target_arch = "x86_64")]
-        EPOLL_CREATE1 => unimplemented!("epoll_create1"),
+        EPOLL_CREATE1 => syscall_epoll_create1(args),
+        // EPOLL_CREATE1 => unimplemented!("epoll_create1"),
         #[cfg(target_arch = "x86_64")]
-        EPOLL_PWAIT => unimplemented!("epoll_ctl"),
+        EPOLL_PWAIT => syscall_epoll_wait(args),
+        // EPOLL_PWAIT => unimplemented!("epoll_ctl"),
         #[cfg(target_arch = "x86_64")]
         CHMOD => Ok(0),
     }

@@ -1,7 +1,7 @@
 //! 获取文件系统状态信息
 //!
 
-use crate::{get_fs_stat, FsStat, SyscallError, SyscallResult};
+use crate::{get_fs_stat, FsStat, FsStatx, SyscallError, SyscallResult};
 use axfs::api::{FileIOType, Kstat};
 use axlog::{debug, error, info};
 use axprocess::{
@@ -58,7 +58,7 @@ pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let kst = args[2] as *mut Kstat;
-    let file_path = if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {
+    let file_path = if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {axlog::error!("syscall_fstatat: {:?}", args);
         // error!("test {:?}", file_path);
         file_path
     } else {
@@ -122,7 +122,7 @@ pub fn syscall_stat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_statfs(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     let stat = args[1] as *mut FsStat;
-    let file_path = deal_with_path(AT_FDCWD, Some(path), false).unwrap();
+    let file_path = deal_with_path(AT_FDCWD, Some(path), false).unwrap();axlog::error!("syscall_statfs: {:?}", args);
     if file_path.equal_to(&FilePath::new("/").unwrap()) {
         // 目前只支持访问根目录文件系统的信息
         unsafe {
@@ -134,4 +134,50 @@ pub fn syscall_statfs(args: [usize; 6]) -> SyscallResult {
         error!("Only support fs_stat for root");
         Err(SyscallError::EINVAL)
     }
+}
+
+/// get file status (extended)
+/// https://man7.org/linux/man-pages/man2/statx.2.html
+/// This function returns information about a file, storing it in the
+/// buffer pointed to by statxbuf.  The returned buffer is a
+/// structure of the following type
+///
+///
+pub fn syscall_statx(args: [usize; 6]) -> SyscallResult {
+    axlog::error!("{args:?}");
+
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let stat = args[4] as *mut FsStatx;
+    if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {axlog::error!("syscall_statx: {:?}", args);
+        if let Ok(p) = FilePath::new("/") {
+            if file_path.equal_to(&p) {
+                // 目前只支持访问根目录文件系统的信息
+                unsafe {
+                    *stat = FsStatx::new();
+                }
+
+                return Ok(0);
+            }
+        }
+        // if file_path.equal_to(&FilePath::new("/").unwrap()) {
+        //     // 目前只支持访问根目录文件系统的信息
+        //     unsafe {
+        //         *stat = FsStatx::new();
+        //     }
+
+        //     return Ok(0);
+        // } else {
+        //     error!("Only support fs_stat for root");
+        //     // Err(SyscallError::EINVAL)
+        // }
+    }
+
+    Err(SyscallError::EINVAL)
+
+    // unsafe {
+    //     *stat = FsStatx::new();
+    // }
+
+    // Ok(0)
 }

@@ -26,7 +26,7 @@ pub fn net_syscall(syscall_id: net_syscall_id::NetSyscallId, args: [usize; 6]) -
         SETSOCKOPT => syscall_set_sock_opt(args),
         // SETSOCKOPT => 0,
         GETSOCKOPT => syscall_get_sock_opt(args),
-        SOCKETPAIR => syscall_socketpair(),
+        SOCKETPAIR => syscall_socketpair(args),
         ACCEPT4 => syscall_accept4(args),
         SHUTDOWN => syscall_shutdown(args),
         #[allow(unused)]

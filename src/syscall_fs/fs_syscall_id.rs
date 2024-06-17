@@ -57,6 +57,7 @@ pub enum FsSyscallId {
     UTIMENSAT = 88,
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,
+    STATX = 291,
 }
 }
 
@@ -129,5 +130,6 @@ numeric_enum_macro::numeric_enum! {
         COPYFILERANGE = 326,
         EPOLL_CREATE1 = 291,
         EPOLL_PWAIT = 281,
+        STATX = 332,
     }
 }

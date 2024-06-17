@@ -5,7 +5,10 @@ use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 use alloc::sync::Arc;
 
-use crate::{SyscallError, SyscallResult};
+use crate::{
+    syscall_fs::{self, ctype::pipe::make_socketpair},
+    SyscallError, SyscallResult,
+};
 use axerrno::AxError;
 use axlog::{debug, error, info, warn};
 use axnet::{into_core_sockaddr, IpAddr, SocketAddr};
@@ -606,6 +609,38 @@ pub fn syscall_shutdown(args: [usize; 6]) -> SyscallResult {
     Ok(0)
 }
 
-pub fn syscall_socketpair() -> SyscallResult {
-    Err(SyscallError::EAFNOSUPPORT)
+pub fn syscall_socketpair(args: [usize; 6]) -> SyscallResult {
+    let fd: *mut u32 = args[3] as *mut u32;
+    let s_type = args[1];
+
+    let process = current_process();
+    if process.manual_alloc_for_lazy((fd as usize).into()).is_err() {
+        return Err(SyscallError::EINVAL);
+    }
+
+    let non_block = (s_type & 0x800) != 0;
+    let (fd1, fd2) = make_socketpair(non_block);
+    let mut fd_table = process.fd_manager.fd_table.lock();
+    let fd_num = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
+        fd
+    } else {
+        return Err(SyscallError::EPERM);
+    };
+    fd_table[fd_num] = Some(fd1);
+
+    let fd_num2 = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
+        fd
+    } else {
+        return Err(SyscallError::EPERM);
+    };
+    fd_table[fd_num2] = Some(fd2);
+
+    unsafe {
+        core::ptr::write(fd, fd_num as u32);
+        core::ptr::write(fd.offset(1), fd_num2 as u32);
+    }
+
+    Ok(0)
+    // syscall_fs::imp::syscall_pipe2([args[3], args[1], 0, 0, 0, 0])
+    // Err(SyscallError::EAFNOSUPPORT)
 }
