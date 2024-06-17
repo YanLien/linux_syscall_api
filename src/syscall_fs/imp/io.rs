@@ -356,6 +356,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let _mode = args[3] as u8;
     let force_dir = OpenFlags::from(flags).is_dir();
     let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
+        axlog::error!("syscall_openat: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -593,6 +594,7 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
     }
 
     let path = deal_with_path(dir_fd, Some(path), false);
+    axlog::error!("syscall_readlinkat: {:?}", args);
 
     if path.is_none() {
         return Err(SyscallError::ENOENT);

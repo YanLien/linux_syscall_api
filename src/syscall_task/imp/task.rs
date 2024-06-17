@@ -89,6 +89,7 @@ pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
     let mut argv = args[1] as *const usize;
     let mut envp = args[2] as *const usize;
     let path = deal_with_path(AT_FDCWD, Some(path), false);
+    axlog::error!("syscall_exec: {:?}", args);
     if path.is_none() {
         return Err(SyscallError::EINVAL);
     }
