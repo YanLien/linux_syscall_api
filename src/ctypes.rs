@@ -517,6 +517,81 @@ pub fn get_fs_stat() -> FsStat {
     }
 }
 
+/// statx - get file status (extended)
+/// Standard C library (libc, -lc)
+/// https://man7.org/linux/man-pages/man2/statx.2.html
+#[repr(C)]
+#[derive(Debug, Default)]
+pub struct FsStatx {
+    pub stx_mask: u32,
+    pub stx_blksize: u32,
+    pub stx_attributes: u64,
+    pub stx_nlink: u32,
+    pub stx_uid: u32,
+    pub stx_gid: u32,
+    pub stx_mode: u16,
+    pub stx_ino: u64,
+    pub stx_size: u64,
+    pub stx_blocks: u64,
+    pub stx_attributes_mask: u64,
+    pub stx_atime: FsStatxTimestamp,
+    pub stx_btime: FsStatxTimestamp,
+    pub stx_ctime: FsStatxTimestamp,
+    pub stx_mtime: FsStatxTimestamp,
+    pub stx_rdev_major: u32,
+    pub stx_rdev_minor: u32,
+    pub stx_dev_major: u32,
+    pub stx_dev_minor: u32,
+    pub stx_mnt_id: u64,
+    pub stx_dio_mem_align: u32,
+    pub stx_dio_offset_align: u32,
+}
+
+impl FsStatx {
+    pub fn new() -> Self {
+        Self {
+            stx_mask: 0,
+            stx_blksize: 1024,
+            stx_attributes: 0,
+            stx_nlink: 0,
+            stx_uid: 0,
+            stx_gid: 0,
+            stx_mode: 0,
+            stx_ino: 0,
+            stx_size: 0,
+            stx_blocks: 0x4000_0000 / 512,
+            stx_attributes_mask: 0,
+            stx_atime: FsStatxTimestamp::new(),
+            stx_btime: FsStatxTimestamp::new(),
+            stx_ctime: FsStatxTimestamp::new(),
+            stx_mtime: FsStatxTimestamp::new(),
+            stx_rdev_major: 0,
+            stx_rdev_minor: 0,
+            stx_dev_major: 0,
+            stx_dev_minor: 0,
+            stx_mnt_id: 0,
+            stx_dio_mem_align: 0,
+            stx_dio_offset_align: 0,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Default)]
+pub struct FsStatxTimestamp {
+    pub tv_sec: i64,
+    pub tv_nsec: u32,
+}
+
+impl FsStatxTimestamp {
+    pub fn new() -> Self {
+        Self {
+            tv_sec: 0,
+            tv_nsec: 0,
+        }
+    }
+}
+
 bitflags! {
     /// 指定 st_mode 的选项
     pub struct StMode: u32 {
@@ -588,13 +663,13 @@ pub struct CloneArgs {
     pub pidfd: u64,
     /// 同 sys_clone 的 ctid
     pub child_tid: u64,
-    /// 同 sys_clone 的 ptid    
+    /// 同 sys_clone 的 ptid
     pub parent_tid: u64,
     /// 子进程退出时向父进程发送的信号
     pub exit_signal: u64,
     /// 同 sys_clone 的 stack
     pub stack: u64,
-    /// 指定子进程的栈的大小   
+    /// 指定子进程的栈的大小
     pub stack_size: u64,
     /// 同 sys_clone 的 tls
     pub tls: u64,
