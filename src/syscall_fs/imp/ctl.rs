@@ -71,6 +71,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     let mode = args[2] as u32;
     // info!("signal module: {:?}", process_inner.signal_module.keys());
     let path = if let Some(path) = deal_with_path(dir_fd, Some(path), true) {
+        axlog::error!("syscall_mkdirat: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -117,6 +118,7 @@ pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     // 从path中读取字符串
     let path = if let Some(path) = deal_with_path(AT_FDCWD, Some(path), true) {
+        axlog::error!("syscall_chdir: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -142,6 +144,7 @@ pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
     let buf = args[1] as *mut u8;
     let len = args[2];
     let path = if let Some(path) = deal_with_path(fd, None, true) {
+        axlog::error!("syscall_getdents64: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -258,7 +261,9 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
     let _new_path = args[3] as *const u8;
     let flags = args[4];
     let old_path = deal_with_path(old_dirfd, Some(_old_path), false).unwrap();
+    axlog::error!("syscall_renameat2 old_path : {:?}", args);
     let new_path = deal_with_path(new_dirfd, Some(_new_path), false).unwrap();
+    axlog::error!("syscall_renameat2 new_path: {:?}", args);
 
     let proc_path = FilePath::new("/proc").unwrap();
     if old_path.start_with(&proc_path) || new_path.start_with(&proc_path) {
@@ -391,16 +396,19 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
             if file.set_close_on_exec((arg & 1) != 0) {
                 Ok(0)
             } else {
+                error!("file.set_close_on_exec");
                 Err(SyscallError::EINVAL)
             }
         }
         Ok(Fcntl64Cmd::F_GETFL) => Ok(file.get_status().bits() as isize),
         Ok(Fcntl64Cmd::F_SETFL) => {
+            return Ok(0);
             if let Some(flags) = OpenFlags::from_bits(arg as u32) {
                 if file.set_status(flags) {
                     return Ok(0);
                 }
             }
+            error!("OpenFlags::from_bits");
             Err(SyscallError::EINVAL)
         }
         Ok(Fcntl64Cmd::F_DUPFD_CLOEXEC) => {
@@ -415,10 +423,14 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
                 fd_table[new_fd] = fd_table[fd].clone();
                 Ok(new_fd as isize)
             } else {
+                error!("file.F_DUPFD_CLOEXEC");
                 Err(SyscallError::EINVAL)
             }
         }
-        _ => Err(SyscallError::EINVAL),
+        _ => {
+            error!("error fd: {}, cmd: {}", fd, cmd);
+            Err(SyscallError::EINVAL)
+        }
     }
 }
 
@@ -472,6 +484,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let mode = args[2];
     let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    axlog::error!("syscall_fchmodat: {:?}", args);
     axfs::api::metadata(file_path.path())
         .map(|mut metadata| {
             metadata.set_permissions(Permissions::from_bits_truncate(mode as u16));
@@ -501,6 +514,7 @@ pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
     // todo: 有问题,实际上需要考虑当前进程对应的用户UID和文件拥有者之间的关系
     // 现在一律当作root用户处理
     let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    axlog::error!("syscall_faccessat: {:?}", args);
     axfs::api::metadata(file_path.path())
         .map(|metadata| {
             if mode == 0 {
@@ -622,6 +636,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         Ok(0)
     } else {
         let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+        axlog::error!("syscall_utimensat: {:?}", args);
         if !axfs::api::path_exists(file_path.path()) {
             error!("Set time failed: file {} doesn't exist!", file_path.path());
             if !axfs::api::path_exists(file_path.dir().unwrap()) {

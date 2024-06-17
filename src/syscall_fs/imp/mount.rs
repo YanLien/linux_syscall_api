@@ -24,8 +24,10 @@ pub fn syscall_mount(args: [usize; 6]) -> SyscallResult {
     let _flags = args[3];
     let _data = args[4] as *const u8;
     let device_path = deal_with_path(AT_FDCWD, Some(special), false).unwrap();
+    axlog::error!("syscall_mount dev: {:?}", args);
     // 这里dir必须以"/"结尾,但在shell中输入时,不需要以"/"结尾
     let mount_path = deal_with_path(AT_FDCWD, Some(dir), true).unwrap();
+    axlog::error!("syscall_mount mount: {:?}", args);
 
     let process = current_process();
     if process
@@ -97,6 +99,7 @@ pub fn syscall_umount(args: [usize; 6]) -> SyscallResult {
     let dir = args[0] as *const u8;
     let flags = args[1];
     let mount_path = deal_with_path(AT_FDCWD, Some(dir), true).unwrap();
+    axlog::error!("syscall_umount: {:?}", args);
 
     if flags != 0 {
         debug!("flags unimplemented");
