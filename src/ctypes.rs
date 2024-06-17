@@ -4,6 +4,11 @@ use axhal::{
 };
 use bitflags::*;
 use core::panic;
+
+/// a flag used in sys_dup3
+#[allow(dead_code)]
+pub const O_CLOEXEC: u32 = 524288;
+
 /// The nano seconds number per second
 pub const NSEC_PER_SEC: usize = 1_000_000_000;
 bitflags! {

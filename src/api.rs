@@ -8,7 +8,7 @@ use axhal::{
 };
 use axprocess::{wait_pid, yield_now_task, Process, PID2PC};
 use axruntime::KERNEL_PAGE_TABLE;
-use axtask::{TaskId, EXITED_TASKS};
+use axtask::{TaskId, Processor};
 
 use axfs::api::OpenFlags;
 
@@ -52,7 +52,7 @@ pub fn recycle_user_process() {
         write_page_table_root(KERNEL_PAGE_TABLE.root_paddr());
         flush_tlb(None);
     };
-    EXITED_TASKS.lock().clear();
+    Processor::clean_all();
     init_current_dir();
 }
 
