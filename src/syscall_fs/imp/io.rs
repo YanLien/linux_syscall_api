@@ -388,7 +388,6 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let _mode = args[3] as u8;
     let force_dir = OpenFlags::from(flags).is_dir();
     let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
-        axlog::error!("syscall_openat: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -626,21 +625,12 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
     }
 
     let path = deal_with_path(dir_fd, Some(path), false);
-    axlog::error!("syscall_readlinkat: {:?}", args);
 
     if path.is_none() {
         return Err(SyscallError::ENOENT);
     }
     let path = path.unwrap();
-    if path.path() == "proc/self/exe" {
-        // 针对lmbench_all特判
-        let name = "/lmbench_all";
-        let len = bufsiz.min(name.len());
-        let slice = unsafe { core::slice::from_raw_parts_mut(buf, bufsiz) };
-        slice.copy_from_slice(&name.as_bytes()[..len]);
-        return Ok(len as isize);
-    }
-
+    axlog::info!("read link at: {}", path.path());
     // 获取进程自身的符号链接信息
     if path.path() == "/proc/self/exe" {
         // 获取该进程符号链接对应的真正地址

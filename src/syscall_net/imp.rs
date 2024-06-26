@@ -5,10 +5,7 @@ use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 use alloc::sync::Arc;
 
-use crate::{
-    syscall_fs::{self, ctype::pipe::make_socketpair},
-    SyscallError, SyscallResult,
-};
+use crate::{syscall_fs::ctype::pipe::make_socketpair, SyscallError, SyscallResult};
 use axerrno::AxError;
 use axlog::{debug, error, info, warn};
 use axnet::{into_core_sockaddr, IpAddr, SocketAddr};
@@ -633,6 +630,7 @@ pub fn syscall_socketpair(args: [usize; 6]) -> SyscallResult {
     } else {
         return Err(SyscallError::EPERM);
     };
+    axlog::debug!("alloc fd1 {} fd2 {} as socketpair", fd_num, fd_num2);
     fd_table[fd_num2] = Some(fd2);
 
     unsafe {

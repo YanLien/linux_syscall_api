@@ -8,7 +8,7 @@ use alloc::{
 };
 use axerrno::{AxError, AxResult};
 
-use axfs::api::{FileIO, FileIOType, SeekFrom};
+use axfs::api::{FileIO, FileIOType, OpenFlags, SeekFrom};
 
 use crate::SyscallError;
 use axprocess::{current_process, yield_now_task};
@@ -63,6 +63,9 @@ pub struct EpollFile {
     /// 定义内部可变变量
     /// 由于存在clone，所以要用arc指针包围
     pub inner: Arc<Mutex<EpollFileInner>>,
+
+    /// 文件打开的标志位
+    pub flags: Mutex<OpenFlags>,
 }
 
 pub struct EpollFileInner {
@@ -80,6 +83,7 @@ impl EpollFile {
                 monitor_list: BTreeMap::new(),
                 _response_list: BTreeSet::new(),
             })),
+            flags: Mutex::new(OpenFlags::empty()),
         }
     }
 
@@ -88,6 +92,7 @@ impl EpollFile {
     pub fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
+            flags: Mutex::new(self.flags.lock().clone()),
         }
     }
 
@@ -239,6 +244,21 @@ impl FileIO for EpollFile {
     fn get_type(&self) -> FileIOType {
         FileIOType::FileDesc
     }
+
+    fn set_close_on_exec(&self, is_set: bool) -> bool {
+        if is_set {
+            // 设置close_on_exec位置
+            *self.flags.lock() |= OpenFlags::CLOEXEC;
+        } else {
+            *self.flags.lock() &= !OpenFlags::CLOEXEC;
+        }
+        true
+    }
+
+    fn get_status(&self) -> OpenFlags {
+        *self.flags.lock()
+    }
+
     fn ready_to_read(&self) -> bool {
         // 如果当前epoll事件确实正在等待事件响应，那么可以认为事件准备好read，尽管无法读到实际内容
         let events = self.get_events();

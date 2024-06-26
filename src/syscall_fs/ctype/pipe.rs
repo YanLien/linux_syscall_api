@@ -270,11 +270,16 @@ impl FileIO for Pipe {
 pub struct SocketPair {
     buffer: Arc<Mutex<SocketPairBuffer>>,
     non_block: bool,
+    flags: Mutex<OpenFlags>,
 }
 
 impl SocketPair {
     pub fn new(buffer: Arc<Mutex<SocketPairBuffer>>, non_block: bool) -> Self {
-        Self { buffer, non_block }
+        Self {
+            buffer,
+            non_block,
+            flags: Mutex::new(OpenFlags::empty()),
+        }
     }
 }
 
@@ -359,6 +364,20 @@ impl FileIO for SocketPair {
 
     fn get_type(&self) -> axfs::api::FileIOType {
         axfs::api::FileIOType::Socket
+    }
+
+    fn get_status(&self) -> OpenFlags {
+        *self.flags.lock()
+    }
+
+    fn set_close_on_exec(&self, is_set: bool) -> bool {
+        if is_set {
+            // 设置close_on_exec位置
+            *self.flags.lock() |= OpenFlags::CLOEXEC;
+        } else {
+            *self.flags.lock() &= !OpenFlags::CLOEXEC;
+        }
+        true
     }
 }
 
