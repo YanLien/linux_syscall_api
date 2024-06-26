@@ -102,6 +102,7 @@ numeric_enum_macro::numeric_enum! {
         GETUID = 102,
         GETEUID = 107,
         GETGID = 104,
+        SETGID = 106,
         GETPGID = 121,
         SETPGID = 109,
         GETEGID = 108,

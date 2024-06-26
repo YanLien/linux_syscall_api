@@ -1,4 +1,3 @@
-use core::mem::size_of;
 /// 处理与任务（线程）有关的系统调用
 use core::time::Duration;
 
@@ -204,17 +203,14 @@ pub fn syscall_clone(args: [usize; 6]) -> SyscallResult {
 /// * `clone_args` - *const CloneArgs
 /// * `size` - usize
 pub fn syscall_clone3(args: [usize; 6]) -> SyscallResult {
-    let size = args[1];
     let clone_args = args[0] as *const CloneArgs;
-    assert!(size >= size_of::<CloneArgs>());
 
     let curr_process = current_process();
 
     let args = match curr_process.manual_alloc_type_for_lazy(clone_args) {
         Ok(_) => unsafe { &*clone_args },
-        Err(_) => return Err(SyscallError::EFAULT),
+        Err(_) => return Err(SyscallError::EINVAL),
     };
-
     let clone_flags = CloneFlags::from_bits(args.flags as u32).unwrap();
 
     let stack = if args.stack == 0 {
@@ -222,10 +218,7 @@ pub fn syscall_clone3(args: [usize; 6]) -> SyscallResult {
     } else {
         Some(args.stack as usize)
     };
-
     let sig_child = SignalNo::from(args.exit_signal as usize & 0x3f) == SignalNo::SIGCHLD;
-
-    warn!("stack size  {}", args.stack_size);
     if let Ok(new_task_id) = curr_process.clone_task(
         clone_flags,
         stack,
@@ -259,7 +252,7 @@ pub fn syscall_vfork() -> SyscallResult {
 /// * `exit_code_ptr` - *mut i32
 /// * `option` - WaitFlags
 pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
-    let pid = args[0] as isize;
+    let pid: isize = args[0] as isize;
     let exit_code_ptr = args[1] as *mut i32;
     let option = WaitFlags::from_bits(args[2] as u32).unwrap();
     loop {
@@ -271,7 +264,7 @@ pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
             Err(status) => {
                 match status {
                     WaitStatus::NotExist => {
-                        return Err(SyscallError::EPERM);
+                        return Err(SyscallError::ECHILD);
                     }
                     WaitStatus::Running => {
                         if option.contains(WaitFlags::WNOHANG) {
@@ -280,8 +273,10 @@ pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
                         } else {
                             // wait回来之后，如果还需要wait，先检查是否有信号未处理
 
-                            if current_process().have_signals().is_some() {
-                                return Err(SyscallError::EINTR);
+                            match current_process().have_restart_signals() {
+                                Some(true) => return Err(SyscallError::ERESTART),
+                                Some(false) => return Err(SyscallError::EINTR),
+                                None => {}
                             }
                             // 执行yield操作，切换任务
                             yield_now_task();

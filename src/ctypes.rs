@@ -20,6 +20,10 @@ bitflags! {
         const WIMTRACED = 1 << 1;
         /// 报告还未结束的用户进程的状态
         const WCONTINUED = 1 << 3;
+        /// Wait for any child
+        const WALL = 1 << 30;
+        /// Wait for cloned process
+        const WCLONE = 1 << 31;
     }
 }
 /// sys_times 中指定的结构体类型
@@ -171,6 +175,8 @@ bitflags! {
         const MAP_ANONYMOUS = 1 << 5;
         /// 映射时不保留空间，即可能在实际使用mmp出来的内存时内存溢出
         const MAP_NORESERVE = 1 << 14;
+        /// Allocation is for a stack.
+        const MAP_STACK = 0x20000;
     }
 }
 
@@ -210,8 +216,8 @@ impl Default for UtsName {
         Self {
             sysname: Self::from_str("Starry"),
             nodename: Self::from_str("Starry - machine[0]"),
-            release: Self::from_str("100"),
-            version: Self::from_str("1.0"),
+            release: Self::from_str("1.0.0"),
+            version: Self::from_str("1.0.0"),
             machine: Self::from_str("RISC-V 64 on SIFIVE FU740"),
             domainname: Self::from_str("https://github.com/Azure-stars/arceos"),
         }

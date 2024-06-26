@@ -114,5 +114,7 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         // EPOLL_PWAIT => unimplemented!("epoll_ctl"),
         #[cfg(target_arch = "x86_64")]
         CHMOD => Ok(0),
+        #[cfg(target_arch = "x86_64")]
+        CHOWN => Ok(0),
     }
 }

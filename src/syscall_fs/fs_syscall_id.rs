@@ -131,5 +131,6 @@ numeric_enum_macro::numeric_enum! {
         EPOLL_CREATE1 = 291,
         EPOLL_PWAIT = 281,
         STATX = 332,
+        CHOWN = 92,
     }
 }

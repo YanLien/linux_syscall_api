@@ -48,7 +48,7 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
     let offset = args[5];
     use axlog::debug;
     use axmem::MemBackend;
-
+    axlog::info!("flags: {:?}", flags);
     let fixed = flags.contains(MMAPFlags::MAP_FIXED);
     // try to map to NULL
     if fixed && start == 0 {
@@ -376,7 +376,6 @@ pub fn syscall_shmat(args: [usize; 6]) -> SyscallResult {
 
     Ok(addr.as_usize() as isize)
 }
-
 
 /// # mlock
 #[cfg(target_arch = "x86_64")]

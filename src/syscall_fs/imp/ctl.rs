@@ -71,7 +71,6 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     let mode = args[2] as u32;
     // info!("signal module: {:?}", process_inner.signal_module.keys());
     let path = if let Some(path) = deal_with_path(dir_fd, Some(path), true) {
-        axlog::error!("syscall_mkdirat: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -118,7 +117,6 @@ pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     // 从path中读取字符串
     let path = if let Some(path) = deal_with_path(AT_FDCWD, Some(path), true) {
-        axlog::error!("syscall_chdir: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -485,7 +483,6 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let mode = args[2];
     let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
-    axlog::error!("syscall_fchmodat: {:?}", args);
     axfs::api::metadata(file_path.path())
         .map(|mut metadata| {
             metadata.set_permissions(Permissions::from_bits_truncate(mode as u16));
@@ -515,7 +512,6 @@ pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
     // todo: 有问题,实际上需要考虑当前进程对应的用户UID和文件拥有者之间的关系
     // 现在一律当作root用户处理
     let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
-    axlog::error!("syscall_faccessat: {:?}", args);
     axfs::api::metadata(file_path.path())
         .map(|metadata| {
             if mode == 0 {
@@ -637,9 +633,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         Ok(0)
     } else {
         let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
-        axlog::error!("syscall_utimensat: {:?}", args);
         if !axfs::api::path_exists(file_path.path()) {
-            error!("Set time failed: file {} doesn't exist!", file_path.path());
             if !axfs::api::path_exists(file_path.dir().unwrap()) {
                 return Err(SyscallError::ENOTDIR);
             } else {

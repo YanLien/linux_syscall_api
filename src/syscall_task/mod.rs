@@ -24,6 +24,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         GETPGID => syscall_getpgid(),
         SETPGID => syscall_setpgid(args),
         GETPID => syscall_getpid(),
+
         GETPPID => syscall_getppid(),
         WAIT4 => syscall_wait4(args),
         GETRANDOM => syscall_getrandom(args),
@@ -48,6 +49,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         GETUID => syscall_getuid(),
         GETEUID => syscall_geteuid(),
         GETGID => syscall_getgid(),
+        SETGID => Ok(0),
         GETEGID => syscall_getegid(),
         GETTID => syscall_gettid(),
         FUTEX => syscall_futex(args),

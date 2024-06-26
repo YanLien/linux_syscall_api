@@ -27,12 +27,14 @@ pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
     let new_path = args[3] as *const u8;
     let _flags = args[4];
 
-    let old_path = if let Some(path) = deal_with_path(old_dir_fd, Some(old_path), false) {axlog::error!("sys_linkat old: {:?}", args);
+    let old_path = if let Some(path) = deal_with_path(old_dir_fd, Some(old_path), false) {
+        axlog::error!("sys_linkat old: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
     };
-    let new_path = if let Some(path) = deal_with_path(new_dir_fd, Some(new_path), false) {axlog::error!("sys_linkat new: {:?}", args);
+    let new_path = if let Some(path) = deal_with_path(new_dir_fd, Some(new_path), false) {
+        axlog::error!("sys_linkat new: {:?}", args);
         path
     } else {
         return Err(SyscallError::EINVAL);
@@ -67,7 +69,7 @@ pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let flags = args[2];
-    let path = deal_with_path(dir_fd, Some(path), false).unwrap();axlog::error!("syscall_unlinkat: {:?}", args);
+    let path = deal_with_path(dir_fd, Some(path), false).unwrap();
 
     if path.start_with(&FilePath::new("/proc").unwrap()) {
         return Ok(-1);
