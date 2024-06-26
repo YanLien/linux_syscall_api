@@ -216,7 +216,7 @@ pub fn syscall_clone3(args: [usize; 6]) -> SyscallResult {
     let stack = if args.stack == 0 {
         None
     } else {
-        Some(args.stack as usize)
+        Some((args.stack + args.stack_size) as usize)
     };
     let sig_child = SignalNo::from(args.exit_signal as usize & 0x3f) == SignalNo::SIGCHLD;
     if let Ok(new_task_id) = curr_process.clone_task(
