@@ -58,7 +58,7 @@ pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let kst = args[2] as *mut Kstat;
-    let file_path = if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {axlog::error!("syscall_fstatat: {:?}", args);
+    let file_path = if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {
         // error!("test {:?}", file_path);
         file_path
     } else {
@@ -122,7 +122,8 @@ pub fn syscall_stat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_statfs(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     let stat = args[1] as *mut FsStat;
-    let file_path = deal_with_path(AT_FDCWD, Some(path), false).unwrap();axlog::error!("syscall_statfs: {:?}", args);
+    let file_path = deal_with_path(AT_FDCWD, Some(path), false).unwrap();
+    axlog::error!("syscall_statfs: {:?}", args);
     if file_path.equal_to(&FilePath::new("/").unwrap()) {
         // 目前只支持访问根目录文件系统的信息
         unsafe {
@@ -149,7 +150,8 @@ pub fn syscall_statx(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let stat = args[4] as *mut FsStatx;
-    if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {axlog::error!("syscall_statx: {:?}", args);
+    if let Some(file_path) = deal_with_path(dir_fd, Some(path), false) {
+        axlog::error!("syscall_statx: {:?}", args);
         if let Ok(p) = FilePath::new("/") {
             if file_path.equal_to(&p) {
                 // 目前只支持访问根目录文件系统的信息
