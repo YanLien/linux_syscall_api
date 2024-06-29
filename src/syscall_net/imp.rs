@@ -66,11 +66,10 @@ pub fn syscall_bind(args: [usize; 6]) -> SyscallResult {
         _ => return Err(SyscallError::EBADF),
     };
 
-    let addr = unsafe { socket_address_from(addr) };
-
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
+    let addr = unsafe { socket_address_from(addr, socket) };
 
     info!("[bind()] binding socket {} to {:?}", fd, addr);
 
@@ -147,8 +146,12 @@ pub fn syscall_accept4(args: [usize; 6]) -> SyscallResult {
         }
         Err(AxError::Unsupported) => Err(SyscallError::EOPNOTSUPP),
         Err(AxError::Interrupted) => Err(SyscallError::EINTR),
+        Err(AxError::ConnectionReset) => Err(SyscallError::ECONNABORTED),
         Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
-        Err(_) => Err(SyscallError::EPERM),
+        Err(e) => {
+            error!("error: {:?}", e);
+            Err(SyscallError::EPERM)
+        }
     }
 }
 
@@ -171,9 +174,9 @@ pub fn syscall_connect(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::ENOTSOCK);
     };
 
-    let addr = unsafe { socket_address_from(addr_buf) };
+    let addr = unsafe { socket_address_from(addr_buf, socket) };
 
-    debug!("[connect()] socket {fd} connecting to {addr:?}");
+    info!("[connect()] socket {fd} connecting to {addr:?}");
 
     match socket.connect(addr) {
         Ok(_) => Ok(0),
@@ -307,7 +310,7 @@ pub fn syscall_sendto(args: [usize; 6]) -> SyscallResult {
             (addr as usize).into(),
             unsafe { addr.add(addr_len) as usize }.into(),
         ) {
-            Ok(_) => Some(unsafe { socket_address_from(addr) }),
+            Ok(_) => Some(unsafe { socket_address_from(addr, socket) }),
             Err(_) => {
                 error!("[sendto()] addr address {addr:?} invalid");
                 return Err(SyscallError::EFAULT);
@@ -316,6 +319,7 @@ pub fn syscall_sendto(args: [usize; 6]) -> SyscallResult {
     } else {
         None
     };
+    info!("[sendto()] socket {fd} send {len} bytes to addr {:?}", addr);
     let inner = socket.inner.lock();
     let send_result = match &*inner {
         SocketInner::Udp(s) => {
@@ -339,14 +343,13 @@ pub fn syscall_sendto(args: [usize; 6]) -> SyscallResult {
             }
         }
         SocketInner::Tcp(s) => {
-            if addr.is_some() {
-                return Err(SyscallError::EISCONN);
+            if s.is_closed() {
+                // The local socket has been closed.
+                return Err(SyscallError::EPIPE);
             }
-
-            if !s.is_connected() {
-                return Err(SyscallError::ENOTCONN);
-            }
-
+            // if !s.is_connected() {
+            //     return Err(SyscallError::ENOTCONN);
+            // }
             s.send(buf)
         }
     };
@@ -357,7 +360,10 @@ pub fn syscall_sendto(args: [usize; 6]) -> SyscallResult {
             Ok(len as isize)
         }
         Err(AxError::Interrupted) => Err(SyscallError::EINTR),
-        Err(_) => Err(SyscallError::EPERM),
+        Err(e) => {
+            error!("[sendto()] socket {fd} send error: {e:?}");
+            Err(SyscallError::EPERM)
+        }
     }
 }
 

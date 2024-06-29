@@ -681,7 +681,9 @@ impl Socket {
             SocketInner::Udp(s) => {
                 s.shutdown();
             }
-            SocketInner::Tcp(s) => s.close(),
+            SocketInner::Tcp(s) => {
+                let _ = s.shutdown();
+            }
         };
     }
 
@@ -780,10 +782,9 @@ impl FileIO for Socket {
 /// Turn a socket address buffer into a SocketAddr
 ///
 /// Only support INET (ipv4)
-pub unsafe fn socket_address_from(addr: *const u8) -> SocketAddr {
+pub unsafe fn socket_address_from(addr: *const u8, socket: &Socket) -> SocketAddr {
     let addr = addr as *const u16;
-    let domain = Domain::try_from(*addr as usize).expect("Unsupported Domain (Address Family)");
-    match domain {
+    match socket.domain {
         Domain::AF_UNIX => unimplemented!(),
         Domain::AF_INET => {
             let port = u16::from_be(*addr.add(1));
