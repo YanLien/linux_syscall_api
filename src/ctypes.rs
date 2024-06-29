@@ -216,8 +216,8 @@ impl Default for UtsName {
         Self {
             sysname: Self::from_str("Starry"),
             nodename: Self::from_str("Starry - machine[0]"),
-            release: Self::from_str("1.0.0"),
-            version: Self::from_str("1.0.0"),
+            release: Self::from_str("10.0.0"),
+            version: Self::from_str("10.0.0"),
             machine: Self::from_str("RISC-V 64 on SIFIVE FU740"),
             domainname: Self::from_str("https://github.com/Azure-stars/arceos"),
         }
