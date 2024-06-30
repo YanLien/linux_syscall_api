@@ -56,17 +56,17 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
     }
 
     let process = current_process();
-
+    let shared = flags.contains(MMAPFlags::MAP_SHARED);
     let addr = if flags.contains(MMAPFlags::MAP_ANONYMOUS) {
         // no file
-        if !(fd == -1 && offset == 0) {
+        if offset != 0 {
             return Err(SyscallError::EINVAL);
         }
         process
             .memory_set
             .lock()
             .lock()
-            .mmap(start.into(), len, prot.into(), fixed, None)
+            .mmap(start.into(), len, prot.into(), shared, fixed, None)
     } else {
         // file backend
         debug!("[mmap] fd: {}, offset: 0x{:x}", fd, offset);
@@ -88,11 +88,14 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
         };
 
         let backend = MemBackend::new(file, offset as u64);
-        process
-            .memory_set
-            .lock()
-            .lock()
-            .mmap(start.into(), len, prot.into(), fixed, Some(backend))
+        process.memory_set.lock().lock().mmap(
+            start.into(),
+            len,
+            prot.into(),
+            shared,
+            fixed,
+            Some(backend),
+        )
     };
 
     flush_tlb(None);
