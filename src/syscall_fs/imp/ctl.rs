@@ -4,13 +4,16 @@ use axlog::{debug, error, info};
 use core::ptr::copy_nonoverlapping;
 
 use crate::{
-    syscall_fs::ctype::{file::new_fd, FileDesc},
+    syscall_fs::{
+        ctype::{file::new_fd, FileDesc},
+        solve_path,
+    },
     DirEnt, DirEntType, Fcntl64Cmd, RenameFlags, SyscallError, SyscallResult, TimeSecs,
 };
 use axhal::mem::VirtAddr;
 use axprocess::{
     current_process,
-    link::{deal_with_path, FilePath, AT_FDCWD},
+    link::{FilePath, AT_FDCWD},
 };
 
 extern crate alloc;
@@ -29,8 +32,9 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
     let buf = args[0] as *mut u8;
     let len = args[1];
     debug!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
-    let cwd = axfs::api::current_dir().unwrap();
-
+    let mut cwd = axfs::api::current_dir().unwrap();
+    cwd.push('\0');
+    info!("current dir: {:?}", cwd);
     // todo: 如果buf为NULL,则系统分配缓存区
     // let process = current_process();
     // let process_inner = process.inner.lock();
@@ -70,11 +74,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let mode = args[2] as u32;
     // info!("signal module: {:?}", process_inner.signal_module.keys());
-    let path = if let Some(path) = deal_with_path(dir_fd, Some(path), true) {
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
+    let path = solve_path(dir_fd, Some(path), true)?;
     debug!(
         "Into syscall_mkdirat. dirfd: {}, path: {:?}, mode: {}",
         dir_fd,
@@ -116,11 +116,8 @@ pub fn syscall_mkdir(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     // 从path中读取字符串
-    let path = if let Some(path) = deal_with_path(AT_FDCWD, Some(path), true) {
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
+
+    let path = solve_path(AT_FDCWD, Some(path), true)?;
     debug!("Into syscall_chdir. path: {:?}", path.path());
     match axfs::api::set_current_dir(path.path()) {
         Ok(_) => Ok(0),
@@ -141,13 +138,7 @@ pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let buf = args[1] as *mut u8;
     let len = args[2];
-    let path = if let Some(path) = deal_with_path(fd, None, true) {
-        axlog::error!("syscall_getdents64: {:?}", args);
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
-
+    let path = solve_path(fd, None, true)?;
     let process = current_process();
     // 注意是否分配地址
     let start: VirtAddr = (buf as usize).into();
@@ -258,9 +249,9 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
     let new_dirfd = args[2];
     let _new_path = args[3] as *const u8;
     let flags = args[4];
-    let old_path = deal_with_path(old_dirfd, Some(_old_path), false).unwrap();
+    let old_path = solve_path(old_dirfd, Some(_old_path), false)?;
     axlog::error!("syscall_renameat2 old_path : {:?}", args);
-    let new_path = deal_with_path(new_dirfd, Some(_new_path), false).unwrap();
+    let new_path = solve_path(new_dirfd, Some(_new_path), false)?;
     axlog::error!("syscall_renameat2 new_path: {:?}", args);
 
     let proc_path = FilePath::new("/proc").unwrap();
@@ -482,7 +473,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let mode = args[2];
-    let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    let file_path = solve_path(dir_fd, Some(path), false)?;
     axfs::api::metadata(file_path.path())
         .map(|mut metadata| {
             metadata.set_permissions(Permissions::from_bits_truncate(mode as u16));
@@ -511,7 +502,8 @@ pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
     let mode = args[2];
     // todo: 有问题,实际上需要考虑当前进程对应的用户UID和文件拥有者之间的关系
     // 现在一律当作root用户处理
-    let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    let file_path = solve_path(dir_fd, Some(path), false)?;
+    axlog::error!("syscall_faccessat file_path : {:?}", file_path);
     axfs::api::metadata(file_path.path())
         .map(|metadata| {
             if mode == 0 {
@@ -632,7 +624,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         }
         Ok(0)
     } else {
-        let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+        let file_path = solve_path(dir_fd, Some(path), false)?;
         if !axfs::api::path_exists(file_path.path()) {
             if !axfs::api::path_exists(file_path.dir().unwrap()) {
                 return Err(SyscallError::ENOTDIR);

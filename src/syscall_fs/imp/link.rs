@@ -5,7 +5,9 @@ extern crate alloc;
 
 use crate::{SyscallError, SyscallResult};
 use axlog::debug;
-use axprocess::link::{create_link, deal_with_path, remove_link, FilePath};
+use axprocess::link::{create_link, remove_link, FilePath};
+
+use super::solve_path;
 
 /// Special value used to indicate openat should use the current working directory.
 pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of unlinking file.
@@ -27,18 +29,8 @@ pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
     let new_path = args[3] as *const u8;
     let _flags = args[4];
 
-    let old_path = if let Some(path) = deal_with_path(old_dir_fd, Some(old_path), false) {
-        axlog::error!("sys_linkat old: {:?}", args);
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
-    let new_path = if let Some(path) = deal_with_path(new_dir_fd, Some(new_path), false) {
-        axlog::error!("sys_linkat new: {:?}", args);
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
+    let old_path = solve_path(old_dir_fd, Some(old_path), false)?;
+    let new_path = solve_path(new_dir_fd, Some(new_path), false)?;
     if create_link(&old_path, &new_path) {
         Ok(0)
     } else {
@@ -69,7 +61,7 @@ pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let flags = args[2];
-    let path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    let path = solve_path(dir_fd, Some(path), false)?;
 
     if path.start_with(&FilePath::new("/proc").unwrap()) {
         return Ok(-1);

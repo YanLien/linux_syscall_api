@@ -7,7 +7,7 @@ use axprocess::{
     current_process, current_task, exit_current_task,
     flags::{CloneFlags, WaitStatus},
     futex::clear_wait,
-    link::{deal_with_path, raw_ptr_to_ref_str, AT_FDCWD},
+    link::{raw_ptr_to_ref_str, AT_FDCWD},
     set_child_tid, sleep_now_task, wait_pid, yield_now_task, Process, PID2PC,
 };
 use axsync::Mutex;
@@ -16,8 +16,8 @@ use axsync::Mutex;
 //     AxTaskRef,
 // };
 use crate::{
-    CloneArgs, RLimit, SyscallError, SyscallResult, TimeSecs, WaitFlags, RLIMIT_AS, RLIMIT_NOFILE,
-    RLIMIT_STACK,
+    syscall_fs::imp::solve_path, CloneArgs, RLimit, SyscallError, SyscallResult, TimeSecs,
+    WaitFlags, RLIMIT_AS, RLIMIT_NOFILE, RLIMIT_STACK,
 };
 use axlog::{info, warn};
 use axtask::TaskId;
@@ -87,12 +87,8 @@ pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     let mut argv = args[1] as *const usize;
     let mut envp = args[2] as *const usize;
-    let path = deal_with_path(AT_FDCWD, Some(path), false);
-    axlog::error!("syscall_exec: {:?}", args);
-    if path.is_none() {
-        return Err(SyscallError::EINVAL);
-    }
-    let path = path.unwrap();
+    let path = solve_path(AT_FDCWD, Some(path), false)?;
+
     if path.is_dir() {
         return Err(SyscallError::EISDIR);
     }
@@ -123,19 +119,8 @@ pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
             }
         }
     }
-    // let testcase = if args_vec[0] == "./busybox".to_string()
-    //     || args_vec[0] == "busybox".to_string()
-    //     || args_vec[0] == "entry-static.exe".to_string()
-    //     || args_vec[0] == "entry-dynamic.exe".to_string()
-    //     || args_vec[0] == "lmbench_all".to_string()
-    // {
-    //     args_vec[1].clone()
-    // } else {
-    //     args_vec[0].clone()
-    // };
-    // if filter(testcase) == false {
-    //     return -1;
-    // }
+    info!("args: {:?}", args_vec);
+    info!("envs: {:?}", envs_vec);
     let curr_process = current_process();
 
     // 设置 file_path
@@ -179,6 +164,7 @@ pub fn syscall_clone(args: [usize; 6]) -> SyscallResult {
         tls = args[3];
         ctid = args[4];
     }
+    info!("flags: {:X} stack: {:X}", flags, user_stack);
     let clone_flags = CloneFlags::from_bits((flags & !0x3f) as u32).unwrap();
 
     let stack = if user_stack == 0 {
@@ -248,11 +234,11 @@ pub fn syscall_vfork() -> SyscallResult {
 /// 等待子进程完成任务，若子进程没有完成，则自身yield
 /// 当前仅支持WNOHANG选项，即若未完成时则不予等待，直接返回0
 /// # Arguments
-/// * `pid` - isize
+/// * `pid` - i32
 /// * `exit_code_ptr` - *mut i32
 /// * `option` - WaitFlags
 pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
-    let pid: isize = args[0] as isize;
+    let pid: i32 = args[0] as i32;
     let exit_code_ptr = args[1] as *mut i32;
     let option = WaitFlags::from_bits(args[2] as u32).unwrap();
     loop {

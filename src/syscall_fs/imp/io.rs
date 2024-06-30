@@ -1,5 +1,6 @@
 //! 负责与 IO 相关的系统调用
 extern crate alloc;
+use crate::syscall_fs::solve_path;
 use crate::syscall_net::Socket;
 use crate::{IoVec, SyscallError, SyscallResult};
 use alloc::string::ToString;
@@ -10,7 +11,7 @@ use axfs::api::{FileIOType, OpenFlags, SeekFrom};
 
 use axlog::{debug, info};
 use axprocess::current_process;
-use axprocess::link::{create_link, deal_with_path, real_path};
+use axprocess::link::{create_link, real_path};
 
 use crate::syscall_fs::ctype::{
     dir::new_dir,
@@ -387,11 +388,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let flags = args[2];
     let _mode = args[3] as u8;
     let force_dir = OpenFlags::from(flags).is_dir();
-    let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
-        path
-    } else {
-        return Err(SyscallError::EINVAL);
-    };
+    let path = solve_path(fd, Some(path), force_dir)?;
     let process = current_process();
     let mut fd_table = process.fd_manager.fd_table.lock();
     let fd_num: usize = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
@@ -442,8 +439,19 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
 #[cfg(target_arch = "x86_64")]
 pub fn syscall_open(args: [usize; 6]) -> SyscallResult {
     use axprocess::link::AT_FDCWD;
-
     let temp_args = [AT_FDCWD, args[0], args[1], args[2], 0, 0];
+    syscall_openat(temp_args)
+}
+
+/// To create a file
+/// which is equivalent to calling open() with flags equal to O_CREAT|O_WRONLY|O_TRUNC.
+#[cfg(target_arch = "x86_64")]
+pub fn syscall_creat(args: [usize; 6]) -> SyscallResult {
+    use axprocess::link::AT_FDCWD;
+    let path = args[0] as *const u8;
+    let mode = args[1] as u8;
+    let flags = OpenFlags::CREATE.bits() | OpenFlags::WRONLY.bits() | OpenFlags::TRUNC.bits();
+    let temp_args = [AT_FDCWD, path as usize, flags as usize, mode as usize, 0, 0];
     syscall_openat(temp_args)
 }
 
@@ -624,12 +632,8 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EFAULT);
     }
 
-    let path = deal_with_path(dir_fd, Some(path), false);
+    let path = solve_path(dir_fd, Some(path), false)?;
 
-    if path.is_none() {
-        return Err(SyscallError::ENOENT);
-    }
-    let path = path.unwrap();
     axlog::info!("read link at: {}", path.path());
     // 获取进程自身的符号链接信息
     if path.path() == "/proc/self/exe" {

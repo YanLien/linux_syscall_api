@@ -111,7 +111,7 @@ impl FileIO for FileDesc {
         let kstat = Kstat {
             st_dev: 1,
             st_ino: inode_number,
-            st_mode: normal_file_mode(StMode::S_IFREG).bits() | 0o644,
+            st_mode: normal_file_mode(StMode::S_IFREG).bits() | 0o777,
             st_nlink: get_link_count(&(self.path.as_str().to_string())) as _,
             st_uid: 0,
             st_gid: 0,

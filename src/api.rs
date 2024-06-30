@@ -8,7 +8,7 @@ use axhal::{
 };
 use axprocess::{wait_pid, yield_now_task, Process, PID2PC};
 use axruntime::KERNEL_PAGE_TABLE;
-use axtask::{TaskId, Processor};
+use axtask::{Processor, TaskId};
 
 use axfs::api::OpenFlags;
 
@@ -107,7 +107,7 @@ pub fn run_testcase(testcase: &str, envs: Vec<String>) {
     }
 
     let user_process = Process::init(args_vec, &envs).unwrap();
-    let now_process_id = user_process.get_process_id() as isize;
+    let now_process_id = user_process.get_process_id() as i32;
     let mut exit_code = 0;
     loop {
         if unsafe { wait_pid(now_process_id, &mut exit_code as *mut i32) }.is_ok() {
