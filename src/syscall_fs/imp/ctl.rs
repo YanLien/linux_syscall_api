@@ -114,15 +114,14 @@ pub fn syscall_mkdir(args: [usize; 6]) -> SyscallResult {
 /// # Return
 /// 成功执行:返回0。失败, 返回-1。
 pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
-    let path = args[0] as *const u8;
+    let path_address = args[0] as *const u8;
     // 从path中读取字符串
 
-    let path = solve_path(AT_FDCWD, Some(path), true)?;
+    let path = solve_path(AT_FDCWD, Some(path_address), true)?;
     debug!("Into syscall_chdir. path: {:?}", path.path());
-    match axfs::api::set_current_dir(path.path()) {
-        Ok(_) => Ok(0),
-        Err(_) => Err(SyscallError::EINVAL),
-    }
+
+    current_process().set_cwd(alloc::string::String::from(path.path()));
+    Ok(0)
 }
 
 /// To get the dirent structures from the directory referred to by the open file descriptor fd into the buffer

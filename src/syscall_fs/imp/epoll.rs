@@ -2,7 +2,7 @@
 //! multiple file descriptors to see if I/O is possible on any of
 //! them.
 extern crate alloc;
-use crate::{SyscallError, SyscallResult};
+use crate::{SigMaskFlag, SyscallError, SyscallResult};
 use alloc::sync::Arc;
 use axhal::{mem::VirtAddr, time::current_ticks};
 use axprocess::current_process;
@@ -130,4 +130,42 @@ pub fn syscall_epoll_wait(args: [usize; 6]) -> SyscallResult {
         }
     }
     Ok(real_len as isize)
+}
+
+/// Implement syscall_epoll_pwait system call
+///
+/// - Set the signal mask of the current process to the value pointed to by sigmask
+/// - Invoke syscall_epoll_wait
+/// - Restore the signal mask of the current process
+pub fn syscall_epoll_pwait(args: [usize; 6]) -> SyscallResult {
+    let sigmask = args[4] as *const usize;
+
+    let process = current_process();
+    if sigmask.is_null() {
+        return syscall_epoll_wait(args);
+    }
+    if process.manual_alloc_type_for_lazy(sigmask).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let old_mask: usize = 0;
+    let temp_args = [
+        SigMaskFlag::Setmask as usize,
+        sigmask as usize,
+        (&old_mask) as *const _ as usize,
+        8,
+        0,
+        0,
+    ];
+    crate::syscall_task::syscall_sigprocmask(temp_args)?;
+    let ret = syscall_epoll_wait(args)?;
+    let temp_args = [
+        SigMaskFlag::Setmask as usize,
+        &old_mask as *const _ as usize,
+        0,
+        8,
+        0,
+        0,
+    ];
+    crate::syscall_task::syscall_sigprocmask(temp_args)?;
+    Ok(ret)
 }

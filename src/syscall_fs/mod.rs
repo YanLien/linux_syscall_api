@@ -110,7 +110,7 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         EPOLL_CREATE1 => syscall_epoll_create1(args),
         // EPOLL_CREATE1 => unimplemented!("epoll_create1"),
         #[cfg(target_arch = "x86_64")]
-        EPOLL_PWAIT => syscall_epoll_wait(args),
+        EPOLL_PWAIT => syscall_epoll_pwait(args),
         // EPOLL_PWAIT => unimplemented!("epoll_ctl"),
         #[cfg(target_arch = "x86_64")]
         CHMOD => Ok(0),

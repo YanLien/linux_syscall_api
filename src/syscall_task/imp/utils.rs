@@ -265,7 +265,7 @@ pub fn syscall_clock_nanosleep(args: [usize; 6]) -> SyscallResult {
 
     if id != ClockId::CLOCK_MONOTONIC {
         // 暂时不支持其他类型
-        return Err(SyscallError::EINVAL);
+        axlog::warn!("Unsupported clock id: {:?}", id);
     }
 
     let process = current_process();
