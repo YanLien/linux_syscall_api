@@ -4,8 +4,8 @@
 use axhal::cpu::this_cpu_id;
 use axlog::{debug, info};
 use axprocess::{current_process, current_task, yield_now_task};
-use axsignal::action::SigAction;
 use axsignal::signal_no::SignalNo;
+use axsignal::{action::SigAction, ucontext::SignalStack};
 
 use crate::{SigMaskFlag, SyscallError, SyscallResult, SIGSET_SIZE_IN_BYTE};
 
@@ -44,11 +44,10 @@ pub fn syscall_sigaction(args: [usize; 6]) -> SyscallResult {
             // 无法分配
             return Err(SyscallError::EPERM);
         }
-        if let Some(action) = signal_handler.get_action(signum) {
-            // 将原有的action存储到old_address
-            unsafe {
-                *old_action = *action;
-            }
+
+        // 将原有的action存储到old_address
+        unsafe {
+            *old_action = *signal_handler.get_action(signum);
         }
     }
 
@@ -214,4 +213,31 @@ pub fn syscall_tkill(args: [usize; 6]) -> SyscallResult {
     } else {
         Err(SyscallError::EINVAL)
     }
+}
+
+/// Set and get the alternate signal stack
+pub fn syscall_sigaltstack(args: [usize; 6]) -> SyscallResult {
+    let current_process = current_process();
+    let ss = args[0] as *const SignalStack;
+    let old_ss = args[1] as *mut SignalStack;
+    if !ss.is_null() && current_process.manual_alloc_type_for_lazy(ss).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let task_id = current_task().id().as_u64();
+    let mut signal_modules = current_process.signal_modules.lock();
+
+    if !old_ss.is_null() {
+        if current_process.manual_alloc_type_for_lazy(old_ss).is_err() {
+            return Err(SyscallError::EFAULT);
+        }
+        unsafe {
+            *old_ss = signal_modules.get(&task_id).unwrap().alternate_stack;
+        }
+    }
+
+    if !ss.is_null() {
+        signal_modules.get_mut(&task_id).unwrap().alternate_stack = unsafe { *ss };
+    }
+
+    Ok(0)
 }

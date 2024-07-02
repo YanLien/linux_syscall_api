@@ -40,7 +40,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         TGKILL => syscall_tkill(args),
 
         SIGPROCMASK => syscall_sigprocmask(args),
-
+        SIGALTSTACK => syscall_sigaltstack(args),
         SIGRETURN => syscall_sigreturn(),
         EXIT_GROUP => syscall_exit(args),
         SET_TID_ADDRESS => syscall_set_tid_address(args),

@@ -28,6 +28,7 @@ pub enum TaskSyscallId {
     SCHED_GETSCHEDULER = 120,
     SCHED_SETAFFINITY = 122,
     SCHED_GETAFFINITY = 123,
+    SIGALTSTACK = 132,
     GET_MEMPOLICY = 236,
     SETPGID = 154,
     GETPGID = 155,
@@ -133,5 +134,6 @@ numeric_enum_macro::numeric_enum! {
         FORK = 57,
         VFORK = 58,
         ALARM = 37,
+        SIGALTSTACK = 131,
     }
 }
