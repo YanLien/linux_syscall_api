@@ -164,8 +164,6 @@ pub fn syscall_clone(args: [usize; 6]) -> SyscallResult {
         tls = args[3];
         ctid = args[4];
     }
-    info!("flags: {:X} stack: {:X}", flags, user_stack);
-    let clone_flags = CloneFlags::from_bits((flags & !0x3f) as u32).unwrap();
 
     let stack = if user_stack == 0 {
         None
@@ -173,11 +171,26 @@ pub fn syscall_clone(args: [usize; 6]) -> SyscallResult {
         Some(user_stack)
     };
     let curr_process = current_process();
+    let sig_child = if SignalNo::from(flags & 0x3f) == SignalNo::SIGCHLD {
+        Some(SignalNo::SIGCHLD)
+    } else {
+        None
+    };
 
-    let sig_child = SignalNo::from(flags & 0x3f) == SignalNo::SIGCHLD;
+    let clone_flags = CloneFlags::from_bits((flags & !0x3f) as u32).unwrap();
 
-    if let Ok(new_task_id) = curr_process.clone_task(clone_flags, stack, ptid, tls, ctid, sig_child)
+    if clone_flags.contains(CloneFlags::CLONE_SIGHAND)
+        && !clone_flags.contains(CloneFlags::CLONE_VM)
     {
+        // Error when CLONE_SIGHAND was specified in the flags mask, but CLONE_VM was not.
+        return Err(SyscallError::EINVAL);
+    }
+
+    if clone_flags.contains(CloneFlags::CLONE_FS) {
+        axlog::warn!("Not support for clone_fs");
+    }
+
+    if let Ok(new_task_id) = curr_process.clone_task(flags, stack, ptid, tls, ctid, sig_child) {
         Ok(new_task_id as isize)
     } else {
         Err(SyscallError::ENOMEM)
@@ -189,24 +202,56 @@ pub fn syscall_clone(args: [usize; 6]) -> SyscallResult {
 /// * `clone_args` - *const CloneArgs
 /// * `size` - usize
 pub fn syscall_clone3(args: [usize; 6]) -> SyscallResult {
-    let clone_args = args[0] as *const CloneArgs;
-
+    let size = args[1];
+    if size < core::mem::size_of::<CloneArgs>() {
+        // The size argument that is supplied to clone3() should be initialized to the size of this structure
+        return Err(SyscallError::EINVAL);
+    }
     let curr_process = current_process();
 
-    let args = match curr_process.manual_alloc_type_for_lazy(clone_args) {
-        Ok(_) => unsafe { &*clone_args },
-        Err(_) => return Err(SyscallError::EINVAL),
+    let args = match curr_process.manual_alloc_range_for_lazy(
+        (args[0] as usize).into(),
+        ((args[0] + size - 1) as usize).into(),
+    ) {
+        Ok(_) => unsafe { &*(args[0] as *const CloneArgs) },
+        Err(_) => return Err(SyscallError::EFAULT),
     };
     let clone_flags = CloneFlags::from_bits(args.flags as u32).unwrap();
+    if (clone_flags.contains(CloneFlags::CLONE_THREAD)
+        || clone_flags.contains(CloneFlags::CLONE_PARENT))
+        && args.exit_signal != 0
+    {
+        // Error when CLONE_THREAD or CLONE_PARENT was specified in the flags mask, but a signal was specified in exit_signal.
+        return Err(SyscallError::EINVAL);
+    }
+    if clone_flags.contains(CloneFlags::CLONE_SIGHAND)
+        && !clone_flags.contains(CloneFlags::CLONE_VM)
+    {
+        // Error when CLONE_SIGHAND was specified in the flags mask, but CLONE_VM was not.
+        return Err(SyscallError::EINVAL);
+    }
+
+    if clone_flags.contains(CloneFlags::CLONE_FS) {
+        axlog::warn!("Not support for clone_fs");
+    }
 
     let stack = if args.stack == 0 {
         None
     } else {
         Some((args.stack + args.stack_size) as usize)
     };
-    let sig_child = SignalNo::from(args.exit_signal as usize & 0x3f) == SignalNo::SIGCHLD;
+    let sig_child = if args.exit_signal != 0 {
+        Some(SignalNo::from(args.exit_signal as usize))
+    } else {
+        None
+    };
+
+    if args.stack != 0 && (args.stack % 16 != 0 || args.stack_size == 0) {
+        return Err(SyscallError::EINVAL);
+    }
+
     if let Ok(new_task_id) = curr_process.clone_task(
-        clone_flags,
+        args.flags as usize,
         stack,
         args.parent_tid as usize,
         args.tls as usize,
