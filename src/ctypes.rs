@@ -403,7 +403,7 @@ pub struct SchedParam {
 numeric_enum_macro::numeric_enum! {
     #[repr(usize)]
     #[allow(non_camel_case_types)]
-    #[derive(PartialEq,Eq)]
+    #[derive(PartialEq,Eq,Debug)]
     /// sys_fcntl64 使用的选项
     pub enum ClockId {
         /// real-time clock
@@ -450,6 +450,13 @@ pub enum DirEntType {
     Socket = 12,
     /// whiteout
     Wht = 14,
+}
+
+/// Structure describing a generic socket address in libc.
+#[repr(C)]
+pub struct LibcSocketAddr {
+    common: u16,
+    sa_data: [u8; 14],
 }
 
 impl DirEnt {
