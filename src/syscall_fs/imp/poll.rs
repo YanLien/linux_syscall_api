@@ -4,7 +4,7 @@ use axprocess::{current_process, yield_now_task};
 use axsignal::signal_no::SignalNo;
 use bitflags::bitflags;
 extern crate alloc;
-use crate::{SyscallError, SyscallResult, TimeSecs};
+use crate::{SyscallError, SyscallResult, TimeSecs, TimeVal};
 use alloc::{sync::Arc, vec::Vec};
 bitflags! {
     /// 在文件上等待或者发生过的事件
@@ -314,14 +314,14 @@ pub fn syscall_select(mut args: [usize; 6]) -> SyscallResult {
 /// * `readfds` - *mut usize
 /// * `writefds` - *mut usize
 /// * `exceptfds` - *mut usize
-/// * `timeout` - *const TimeSecs
+/// * `timeout` - *const TimeVal
 /// * `mask` - usize
 pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
     let nfds = args[0];
     let readfds = args[1] as *mut usize;
     let writefds = args[2] as *mut usize;
     let exceptfds = args[3] as *mut usize;
-    let timeout = args[4] as *const TimeSecs;
+    let timeout = args[4] as *const TimeVal;
     let _mask = args[5];
     let (rfiles, rfds, mut rset) = match init_fd_set(readfds, nfds) {
         Ok(ans) => (ans.files, ans.fds, ans.shadow_bitset),
@@ -348,7 +348,7 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
             axlog::error!("[pselect6()] timeout addr {timeout:?} invalid");
             return Err(SyscallError::EFAULT);
         }
-        current_ticks() as usize + unsafe { (*timeout).get_ticks() }
+        current_ticks() as usize + unsafe { (*timeout).turn_to_ticks() as usize }
     } else {
         usize::MAX
     };

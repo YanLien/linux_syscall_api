@@ -682,7 +682,7 @@ impl Socket {
                 s.shutdown();
             }
             SocketInner::Tcp(s) => {
-                let _ = s.shutdown();
+                s.close();
             }
         };
     }

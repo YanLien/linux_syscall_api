@@ -121,7 +121,7 @@ pub fn syscall_accept4(args: [usize; 6]) -> SyscallResult {
     debug!("[accept()] socket {fd} accept");
 
     // socket.accept() might block, we need to release all lock now.
-    if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+    if curr.manual_alloc_type_for_lazy(addr_len).is_err() {
         return Err(SyscallError::EFAULT);
     }
     let buf_len = unsafe { *addr_len } as usize;
@@ -219,7 +219,7 @@ pub fn syscall_get_sock_name(args: [usize; 6]) -> SyscallResult {
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
-    if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+    if curr.manual_alloc_type_for_lazy(addr_len).is_err() {
         return Err(SyscallError::EFAULT);
     }
     let buf_len = unsafe { *addr_len } as usize;
@@ -259,19 +259,19 @@ pub fn syscall_getpeername(args: [usize; 6]) -> SyscallResult {
         _ => return Err(SyscallError::EBADF),
     };
 
-    let len = match curr.manual_alloc_type_for_lazy(addr_len as *const u32) {
-        Ok(_) => unsafe { *addr_len },
+    let buf_len = match curr.manual_alloc_type_for_lazy(addr_len) {
+        Ok(_) => unsafe { *addr_len as usize },
         Err(_) => return Err(SyscallError::EFAULT),
     };
     // It seems it could be negative according to Linux man page.
-    if (len as i32) < 0 {
+    if (buf_len as i32) < 0 {
         return Err(SyscallError::EINVAL);
     }
 
     if curr
         .manual_alloc_range_for_lazy(
             (addr_buf as usize).into(),
-            unsafe { addr_buf.add(len as usize) as usize }.into(),
+            unsafe { addr_buf.add(buf_len as usize) as usize }.into(),
         )
         .is_err()
     {
@@ -284,10 +284,7 @@ pub fn syscall_getpeername(args: [usize; 6]) -> SyscallResult {
     if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
         return Err(SyscallError::EFAULT);
     }
-    let buf_len = unsafe { *addr_len } as usize;
-    if (buf_len as i32) < 0 {
-        return Err(SyscallError::EINVAL);
-    }
+
     if curr
         .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
         .is_err()
@@ -429,24 +426,19 @@ pub fn syscall_recvfrom(args: [usize; 6]) -> SyscallResult {
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
+    info!("test");
+    if !addr_len.is_null() {
+        if curr.manual_alloc_type_for_lazy(addr_len).is_err() {
+            error!("[recvfrom()] addr_len address {addr_len:?} invalid");
+            return Err(SyscallError::EFAULT);
+        }
+    }
+    if !addr_buf.is_null() && curr.manual_alloc_type_for_lazy(addr_buf).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
 
-    if !addr_len.is_null()
-        && curr
-            .manual_alloc_for_lazy((addr_len as usize).into())
-            .is_err()
-    {
-        error!("[recvfrom()] addr_len address {addr_len:?} invalid");
-        return Err(SyscallError::EFAULT);
-    }
-    if !addr_len.is_null() && curr.manual_alloc_for_lazy(args[2].into()).is_err() {
-        return Err(SyscallError::EFAULT);
-    }
-    let buf_len = unsafe { *addr_len } as usize;
-    if (buf_len as i32) < 0 {
-        return Err(SyscallError::EINVAL);
-    }
     if curr
-        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
+        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + len).into())
         .is_err()
     {
         error!(
@@ -461,6 +453,10 @@ pub fn syscall_recvfrom(args: [usize; 6]) -> SyscallResult {
         Ok((len, addr)) => {
             info!("socket {fd} recv {len} bytes from {addr:?}");
             if !addr_buf.is_null() && !addr_len.is_null() {
+                let buf_len = unsafe { *addr_len } as usize;
+                if (buf_len as i32) < 0 {
+                    return Err(SyscallError::EINVAL);
+                }
                 Ok(
                     unsafe { socket_address_to(addr, addr_buf, buf_len, addr_len) }
                         .map_or(-1, |_| len as isize),
