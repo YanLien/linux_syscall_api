@@ -121,10 +121,22 @@ pub fn syscall_accept4(args: [usize; 6]) -> SyscallResult {
     debug!("[accept()] socket {fd} accept");
 
     // socket.accept() might block, we need to release all lock now.
-
+    if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let buf_len = unsafe { *addr_len } as usize;
+    if (buf_len as i32) < 0 {
+        return Err(SyscallError::EINVAL);
+    }
+    if curr
+        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
+        .is_err()
+    {
+        return Err(SyscallError::EFAULT);
+    }
     match socket.accept() {
         Ok((mut s, addr)) => {
-            let _ = unsafe { socket_address_to(addr, addr_buf, addr_len) };
+            let _ = unsafe { socket_address_to(addr, addr_buf, buf_len, addr_len) };
 
             let mut fd_table = curr.fd_manager.fd_table.lock();
             let Ok(new_fd) = curr.alloc_fd(&mut fd_table) else {
@@ -183,7 +195,8 @@ pub fn syscall_connect(args: [usize; 6]) -> SyscallResult {
         Err(AxError::WouldBlock) => Err(SyscallError::EINPROGRESS),
         Err(AxError::Interrupted) => Err(SyscallError::EINTR),
         Err(AxError::AlreadyExists) => Err(SyscallError::EISCONN),
-        Err(_) => Err(SyscallError::EPERM),
+        // TODO：add more error code
+        Err(_) => Err(SyscallError::ECONNREFUSED),
     }
 }
 
@@ -206,6 +219,19 @@ pub fn syscall_get_sock_name(args: [usize; 6]) -> SyscallResult {
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
+    if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let buf_len = unsafe { *addr_len } as usize;
+    if (buf_len as i32) < 0 {
+        return Err(SyscallError::EINVAL);
+    }
+    if curr
+        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
+        .is_err()
+    {
+        return Err(SyscallError::EFAULT);
+    }
 
     debug!("[getsockname()] socket {fd}");
 
@@ -214,8 +240,7 @@ pub fn syscall_get_sock_name(args: [usize; 6]) -> SyscallResult {
     };
 
     info!("[getsockname()] socket {fd} name: {:?}", name);
-
-    Ok(unsafe { socket_address_to(name, addr, addr_len) }.map_or(-1, |_| 0))
+    Ok(unsafe { socket_address_to(name, addr, buf_len, addr_len) }.map_or(-1, |_| 0))
 }
 
 #[allow(unused)]
@@ -256,9 +281,23 @@ pub fn syscall_getpeername(args: [usize; 6]) -> SyscallResult {
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
-
+    if curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let buf_len = unsafe { *addr_len } as usize;
+    if (buf_len as i32) < 0 {
+        return Err(SyscallError::EINVAL);
+    }
+    if curr
+        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
+        .is_err()
+    {
+        return Err(SyscallError::EFAULT);
+    }
     match socket.peer_name() {
-        Ok(name) => Ok(unsafe { socket_address_to(name, addr_buf, addr_len) }.map_or(-1, |_| 0)),
+        Ok(name) => {
+            Ok(unsafe { socket_address_to(name, addr_buf, buf_len, addr_len) }.map_or(-1, |_| 0))
+        }
         Err(AxError::NotConnected) => Err(SyscallError::ENOTCONN),
         Err(_) => unreachable!(),
     }
@@ -399,14 +438,16 @@ pub fn syscall_recvfrom(args: [usize; 6]) -> SyscallResult {
         error!("[recvfrom()] addr_len address {addr_len:?} invalid");
         return Err(SyscallError::EFAULT);
     }
-    if !addr_buf.is_null()
-        && !addr_len.is_null()
-        && curr
-            .manual_alloc_range_for_lazy(
-                (addr_buf as usize).into(),
-                unsafe { addr_buf.add(*addr_len as usize) as usize }.into(),
-            )
-            .is_err()
+    if !addr_len.is_null() && curr.manual_alloc_for_lazy(args[2].into()).is_err() {
+        return Err(SyscallError::EFAULT);
+    }
+    let buf_len = unsafe { *addr_len } as usize;
+    if (buf_len as i32) < 0 {
+        return Err(SyscallError::EINVAL);
+    }
+    if curr
+        .manual_alloc_range_for_lazy(args[1].into(), (args[1] + buf_len).into())
+        .is_err()
     {
         error!(
             "[recvfrom()] addr_buf address {addr_buf:?}, len: {} invalid",
@@ -420,8 +461,10 @@ pub fn syscall_recvfrom(args: [usize; 6]) -> SyscallResult {
         Ok((len, addr)) => {
             info!("socket {fd} recv {len} bytes from {addr:?}");
             if !addr_buf.is_null() && !addr_len.is_null() {
-                Ok(unsafe { socket_address_to(addr, addr_buf, addr_len) }
-                    .map_or(-1, |_| len as isize))
+                Ok(
+                    unsafe { socket_address_to(addr, addr_buf, buf_len, addr_len) }
+                        .map_or(-1, |_| len as isize),
+                )
             } else {
                 Ok(len as isize)
             }

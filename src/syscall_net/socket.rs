@@ -18,7 +18,7 @@ use axnet::{
 use axsync::Mutex;
 use num_enum::TryFromPrimitive;
 
-use crate::{SyscallError, SyscallResult, TimeVal};
+use crate::{LibcSocketAddr, SyscallError, SyscallResult, TimeVal};
 
 pub const SOCKET_TYPE_MASK: usize = 0xFF;
 
@@ -803,37 +803,40 @@ pub unsafe fn socket_address_from(addr: *const u8, socket: &Socket) -> SocketAdd
 /// addr u32 (big endian)
 ///
 /// TODO: Returns error if buf or buf_len is in invalid memory
-pub unsafe fn socket_address_to(addr: SocketAddr, buf: *mut u8, buf_len: *mut u32) -> AxResult {
-    let mut tot_len = *buf_len as usize;
-
-    *buf_len = 8;
-
+pub unsafe fn socket_address_to(
+    addr: SocketAddr,
+    buf: *mut u8,
+    mut buf_len: usize,
+    buf_len_addr: *mut u32,
+) -> AxResult {
+    *buf_len_addr = core::mem::size_of::<LibcSocketAddr>() as u32;
     // 写入 AF_INET
-    if tot_len == 0 {
+    if buf_len == 0 {
         return Ok(());
     }
     let domain = (Domain::AF_INET as u16).to_ne_bytes();
-    let write_len = tot_len.min(2);
+    let write_len = buf_len.min(2);
     copy_nonoverlapping(domain.as_ptr(), buf, write_len);
     let buf = buf.add(write_len);
-    tot_len -= write_len;
+    buf_len -= write_len;
 
     // 写入 port
-    if tot_len == 0 {
+    if buf_len == 0 {
         return Ok(());
     }
     let port = &addr.port.to_be_bytes();
-    let write_len = tot_len.min(2);
+    let write_len = buf_len.min(2);
     copy_nonoverlapping(port.as_ptr(), buf, write_len);
     let buf = buf.add(write_len);
-    tot_len -= write_len;
+    buf_len -= write_len;
 
-    // 写入 address
-    if tot_len == 0 {
+    // 写入 address, only support ipv4
+    axlog::warn!("Only support ipv4");
+    if buf_len == 0 {
         return Ok(());
     }
     let address = &addr.addr.as_bytes();
-    let write_len = tot_len.min(4);
+    let write_len = buf_len.min(4);
     copy_nonoverlapping(address.as_ptr(), buf, write_len);
 
     Ok(())
