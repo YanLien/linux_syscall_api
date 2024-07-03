@@ -14,7 +14,7 @@ dependencies = [
 [[package]]
 name = "allocator"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/allocator.git#6923b09d2c9d233c7c20629c9f0ab9f120d8ed01"
+source = "git+https://github.com/Starry-OS/allocator.git#3bb2a4a0eaac5517771ce274de176d8c8599dec9"
 dependencies = [
  "bitmap-allocator",
  "rlsf",
@@ -23,10 +23,10 @@ dependencies = [
 [[package]]
 name = "arm_gic"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/arm_gic.git#631819a3328dbf610e7772c4f02f5eb4af6d9882"
+source = "git+https://github.com/Starry-OS/arm_gic.git#9aedb126ed0b059ee4e69e032c5e41b593ed10f0"
 dependencies = [
  "aarch64-cpu",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "cfg-if",
  "tock-registers",
 ]
@@ -34,7 +34,7 @@ dependencies = [
 [[package]]
 name = "arm_pl011"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/arm_pl011.git#44088f39f60002f315384c661fc1e5f1bbe8a8dd"
+source = "git+https://github.com/Starry-OS/arm_pl011.git#cba8ce63e6e2248829ae340219e90e6df43cda48"
 dependencies = [
  "tock-registers",
 ]
@@ -48,7 +48,7 @@ checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 [[package]]
 name = "axalloc"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axalloc.git#6665f35e647c55b845d47ca2c6aab576a335461a"
+source = "git+https://github.com/Starry-OS/axalloc.git#da0de65d739b91fb422d33477d10cee473436c42"
 dependencies = [
  "allocator",
  "axerrno",
@@ -61,7 +61,7 @@ dependencies = [
 [[package]]
 name = "axconfig"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axconfig.git#a19854cc460d85acdacc0d678dca666c8c0fc05b"
+source = "git+https://github.com/Starry-OS/axconfig.git#80213038e457bb03e4ac250351d38f58c30debc8"
 dependencies = [
  "serde",
  "toml_edit",
@@ -70,7 +70,7 @@ dependencies = [
 [[package]]
 name = "axdriver"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axdriver.git#a21caaacd33aa26c9069b0f963f90e0750935dac"
+source = "git+https://github.com/Starry-OS/axdriver.git#16c2d4c354c4d8d42ddb39fb2163687e71648c3f"
 dependencies = [
  "axalloc",
  "axconfig",
@@ -86,7 +86,7 @@ dependencies = [
 [[package]]
 name = "axerrno"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axerrno.git#12d36f6ccdfe06493d75266a0e26981f8c6c3fdc"
+source = "git+https://github.com/Starry-OS/axerrno.git#3e2372cde388aec5a666afd3456d59e8b77bf3bf"
 dependencies = [
  "log",
 ]
@@ -94,13 +94,14 @@ dependencies = [
 [[package]]
 name = "axfeat"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axfeat.git#f0a469a46630dc0c8ba2bcdfd864b4e0439bab2a"
+source = "git+https://github.com/Starry-OS/axfeat.git#d3aa838e286f0e029fcd0aec7bac7bf6932dba8a"
 dependencies = [
  "axalloc",
  "axdriver",
  "axfs",
  "axhal",
  "axlog",
+ "axnet",
  "axprocess",
  "axruntime",
  "axsync",
@@ -110,7 +111,7 @@ dependencies = [
 [[package]]
 name = "axfs"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axfs.git#defa32aad1fd0fbd9aca43411d5459603a821550"
+source = "git+https://github.com/Starry-OS/axfs.git#08cb0ea291b64c4366d791fa2656e6130de2c1ed"
 dependencies = [
  "axconfig",
  "axdriver",
@@ -120,7 +121,7 @@ dependencies = [
  "axfs_vfs",
  "axio",
  "axsync",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "capability",
  "cfg-if",
  "driver_block",
@@ -132,40 +133,40 @@ dependencies = [
 [[package]]
 name = "axfs_devfs"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axfs_devfs.git#00c26de4ae76a2461aef8cc92b9802738dd82ecf"
+source = "git+https://github.com/Starry-OS/axfs_devfs.git#4ca42206513494946da62867c8a235b7192de653"
 dependencies = [
  "axfs_vfs",
  "log",
  "rand",
- "spin 0.9.8",
+ "spin",
 ]
 
 [[package]]
 name = "axfs_ramfs"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axfs_ramfs.git#4adca0d0fd2e71113f1d75dcc0b1850dffc55892"
+source = "git+https://github.com/Starry-OS/axfs_ramfs.git#9d217edeaee2ead59c5f26fc551106abcecef1d9"
 dependencies = [
  "axerrno",
  "axfs_vfs",
  "lazy_static",
  "log",
- "spin 0.9.8",
+ "spin",
 ]
 
 [[package]]
 name = "axfs_vfs"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axfs_vfs.git#4ae66642132158495955728c12d446f28fbb70c2"
+source = "git+https://github.com/Starry-OS/axfs_vfs.git#efd56b34b021bb6e1e65fed6366b9676c33d731b"
 dependencies = [
  "axerrno",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "log",
 ]
 
 [[package]]
 name = "axhal"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axhal.git#bb7589fe64aa14fa53deb285b79a4f24fe47006d"
+source = "git+https://github.com/Starry-OS/axhal.git#5ac7c72e7a1d2de9219c1fda5a929c90cda59460"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
@@ -174,7 +175,7 @@ dependencies = [
  "axconfig",
  "axfs_ramfs",
  "axlog",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "cfg-if",
  "crate_interface",
  "dw_apb_uart",
@@ -204,7 +205,7 @@ dependencies = [
 [[package]]
 name = "axio"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axio.git#4f70d39a0ebef8121c284a9b95369d533eaebb12"
+source = "git+https://github.com/Starry-OS/axio.git#010ddddbca0d718656be8430992d3d8b60372641"
 dependencies = [
  "axerrno",
 ]
@@ -212,7 +213,7 @@ dependencies = [
 [[package]]
 name = "axlog"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axlog.git#64b47ba15f85ad39a2a8069ce45415f0a7166fb8"
+source = "git+https://github.com/Starry-OS/axlog.git#5b28a4c6ae14342c725722ef62311ecc0480699c"
 dependencies = [
  "cfg-if",
  "crate_interface",
@@ -223,7 +224,7 @@ dependencies = [
 [[package]]
 name = "axmem"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axmem.git#b5923a1445bf34a26342b4f82c72ebba4ac4b1e4"
+source = "git+https://github.com/Starry-OS/axmem.git#b6d7f7e69a095fdd51585cb2eda2f279fc46dce1"
 dependencies = [
  "axalloc",
  "axconfig",
@@ -231,6 +232,7 @@ dependencies = [
  "axfs",
  "axhal",
  "axio",
+ "axsync",
  "elf_parser",
  "log",
  "page_table_entry",
@@ -242,7 +244,7 @@ dependencies = [
 [[package]]
 name = "axnet"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axnet.git#2aa071b1f90fe1e85691d42e90a11e4d8fa25eb0"
+source = "git+https://github.com/Starry-OS/axnet.git#2eab2ee0c05103b04e5dc50ffae810f442d60b55"
 dependencies = [
  "axdriver",
  "axerrno",
@@ -256,13 +258,13 @@ dependencies = [
  "lazy_init",
  "log",
  "smoltcp",
- "spin 0.9.8",
+ "spin",
 ]
 
 [[package]]
 name = "axprocess"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axprocess.git#a3aef2d47c3f6dcabf067a032c3193fb760ee248"
+source = "git+https://github.com/Starry-OS/axprocess.git#553b9edc87eb90d4856880250af5608c54f14255"
 dependencies = [
  "axalloc",
  "axconfig",
@@ -275,7 +277,7 @@ dependencies = [
  "axsignal",
  "axsync",
  "axtask",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "cfg-if",
  "elf_parser",
  "lazy_static",
@@ -287,7 +289,7 @@ dependencies = [
 [[package]]
 name = "axruntime"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axruntime.git#3dbaf5eef9605d263932079aebd4a4e6cbc888a9"
+source = "git+https://github.com/Starry-OS/axruntime.git#c38b818497359a78f6cf808c13edfc019835b18a"
 dependencies = [
  "axalloc",
  "axconfig",
@@ -308,10 +310,10 @@ dependencies = [
 [[package]]
 name = "axsignal"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axsignal.git#267cb5b0eb2570a0aba006c87360430b1a49e35c"
+source = "git+https://github.com/Starry-OS/axsignal.git#f2e2c4bdea9d903229bbbe7bc93c34cf9a376249"
 dependencies = [
  "axhal",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "cfg-if",
  "numeric-enum-macro",
 ]
@@ -319,16 +321,18 @@ dependencies = [
 [[package]]
 name = "axsync"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axsync.git#1340dde1a365a59f7fe1fcd6a35c1cd3cceb5c96"
+source = "git+https://github.com/Starry-OS/axsync.git#70651a7c8e918e6f6aced3014acfd16f209aa4c0"
 dependencies = [
+ "axhal",
  "axtask",
+ "cfg-if",
  "spinlock",
 ]
 
 [[package]]
 name = "axtask"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axtask.git#34e5f5bd5f932a060d65b8a15c0d434f86f93996"
+source = "git+https://github.com/Starry-OS/axtask.git#f8d203f3b99699b64562870cf087a142c3aaec8b"
 dependencies = [
  "axconfig",
  "axhal",
@@ -337,6 +341,7 @@ dependencies = [
  "cfg-if",
  "kernel_guard",
  "lazy_init",
+ "linked_list",
  "log",
  "memory_addr",
  "numeric-enum-macro",
@@ -373,9 +378,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.5.0"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1"
+checksum = "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de"
 
 [[package]]
 name = "bitmap-allocator"
@@ -394,10 +399,10 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "capability"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/capability.git#d00386a2584995ade7f5919e50318853abfbe5c1"
+source = "git+https://github.com/Starry-OS/capability.git#0c31adc47e3700cf5156cb79e54fb03e7dfd5b5a"
 dependencies = [
  "axerrno",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
 ]
 
 [[package]]
@@ -419,7 +424,7 @@ source = "git+https://github.com/Starry-OS/crate_interface.git#d27dd9608dbf04b31
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -430,9 +435,9 @@ checksum = "7059fff8937831a9ae6f0fe4d658ffabf58f2ca96aa9dec1c889f936f705f216"
 
 [[package]]
 name = "defmt"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a22725573c1874522d6b853e12cb6c3c08cea5ff79fdc69be544087ac7080439"
+checksum = "a99dd22262668b887121d4672af5a64b238f026099f1a2a1b322066c9ecfe9e0"
 dependencies = [
  "bitflags 1.3.2",
  "defmt-macros",
@@ -440,15 +445,15 @@ dependencies = [
 
 [[package]]
 name = "defmt-macros"
-version = "0.3.8"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b2cc6a76c0932c749dfe6f8191040c880830aa80c07143cd1d0adb5717abd6"
+checksum = "e3a9f309eff1f79b3ebdf252954d90ae440599c26c2c553fe87a2d17195f2dcb"
 dependencies = [
  "defmt-parser",
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -463,7 +468,7 @@ dependencies = [
 [[package]]
 name = "driver_block"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/driver_block.git#261bd624714bbccab6d3f58c9dbe87e5646e0623"
+source = "git+https://github.com/Starry-OS/driver_block.git#10855d53bb0c1aef6e3838d5830422b667e049aa"
 dependencies = [
  "driver_common",
  "log",
@@ -472,22 +477,22 @@ dependencies = [
 [[package]]
 name = "driver_common"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/driver_common.git#4cdcdd9bb30aa14251aa1f6db89d0ca289c2f7c1"
+source = "git+https://github.com/Starry-OS/driver_common.git#eb398e83fde2bdb5fd434588a66b6068e03d330c"
 
 [[package]]
 name = "driver_net"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/driver_net.git#3a6861cfa0a016623ad63f6cdcbe7860bcd2701d"
+source = "git+https://github.com/Starry-OS/driver_net.git#942a7f6a44420aa01c8bff6e56924949f7acf805"
 dependencies = [
  "driver_common",
  "log",
- "spin 0.9.8",
+ "spin",
 ]
 
 [[package]]
 name = "driver_virtio"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/driver_virtio.git#55e907a956acc48af0a64fa1b13b5eefb132c12b"
+source = "git+https://github.com/Starry-OS/driver_virtio.git#2e294c43c6c662bdef01a499eff018d9a6a26aad"
 dependencies = [
  "driver_block",
  "driver_common",
@@ -497,21 +502,21 @@ dependencies = [
 [[package]]
 name = "dw_apb_uart"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/dw_apb_uart.git#e17045e739a5d20b95b9fc0e22d327edd53d5698"
+source = "git+https://github.com/Starry-OS/dw_apb_uart.git#15d6fb0fe127794598565f2a1188c9dc864ec110"
 dependencies = [
  "tock-registers",
 ]
 
 [[package]]
 name = "either"
-version = "1.11.0"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a47c1c47d2f5964e29c61246e81db715514cd532db6b5116a25ea3c03d6780a2"
+checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "elf_parser"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/elf_parser.git#2bcdfea001c0edbb44298e42df2e65e96c33d416"
+source = "git+https://github.com/Starry-OS/elf_parser.git#061cec5c6fdcab5deeca938fc2f6966e07c9aa37"
 dependencies = [
  "axerrno",
  "cfg-if",
@@ -604,27 +609,27 @@ dependencies = [
 [[package]]
 name = "lazy_init"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/lazy_init.git#0aee1e3b80b6de6cd3a59b066b52d58921b76b55"
+source = "git+https://github.com/Starry-OS/lazy_init.git#d0e87c05b715063cc517de50ad5da15b13281def"
 
 [[package]]
 name = "lazy_static"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
- "spin 0.5.2",
+ "spin",
 ]
 
 [[package]]
 name = "libc"
-version = "0.2.154"
+version = "0.2.155"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae743338b92ff9146ce83992f766a31066a91a8c84a45e0e9f21e7cf6de6d346"
+checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 
 [[package]]
 name = "linked_list"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/linked_list.git#3238ef86e8b27bfe13634ba27adf7d69c8b053fa"
+source = "git+https://github.com/Starry-OS/linked_list.git#01ec54f275fda4ece9741f10d281550c077c0312"
 
 [[package]]
 name = "linux_syscall_api"
@@ -643,7 +648,7 @@ dependencies = [
  "axsignal",
  "axsync",
  "axtask",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "cfg-if",
  "lazy_init",
  "num_enum",
@@ -676,9 +681,9 @@ checksum = "0ca88d725a0a943b096803bd34e73a4437208b6077654cc4ecb2947a5f91618d"
 
 [[package]]
 name = "memchr"
-version = "2.7.2"
+version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
+checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "memory_addr"
@@ -728,7 +733,7 @@ source = "git+https://github.com/mexus/numeric-enum-macro#20aef288b2ecd2381ab662
 [[package]]
 name = "of"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/of.git#8c5083c1d30d3d7a6ce63fffdb2764876e7c538b"
+source = "git+https://github.com/Starry-OS/of.git#331a8ab1b51a55b2974d5021fb2334e145192b70"
 dependencies = [
  "fdt",
  "lazy_static",
@@ -737,7 +742,7 @@ dependencies = [
 [[package]]
 name = "page_table"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/page_table.git#d6ba329ddc0bb749bf179e0d3584409f0075e4a6"
+source = "git+https://github.com/Starry-OS/page_table.git#99c8d0439a65f6c21c4134140841a4de493a51c8"
 dependencies = [
  "log",
  "memory_addr",
@@ -747,10 +752,10 @@ dependencies = [
 [[package]]
 name = "page_table_entry"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/page_table_entry.git#3d6bdc92bc9b17cfd3b6ec27c9cb1546857cfacd"
+source = "git+https://github.com/Starry-OS/page_table_entry.git#b3d8a577c29d19813fbc8c587d86557495099ae3"
 dependencies = [
  "aarch64-cpu",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "memory_addr",
  "x86_64",
 ]
@@ -764,22 +769,22 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "percpu"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/percpu.git#939e6eb912125e18b609398c4e5e47aa367f697b"
+source = "git+https://github.com/Starry-OS/percpu.git#85e6d8a74f19ac54004e64d42cda07d14042e3ee"
 dependencies = [
  "cfg-if",
  "percpu_macros",
- "spin 0.9.8",
+ "spin",
  "x86",
 ]
 
 [[package]]
 name = "percpu_macros"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/percpu_macros.git#dca9e98359fc9e24f4b1baaa8f90b27f183f6f8e"
+source = "git+https://github.com/Starry-OS/percpu_macros.git#b785b814c5489ac7043d80ea4b5a735b23ec2321"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -808,9 +813,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.82"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ad3d49ab951a01fbaafe34f2ec74122942fe18a3f9814c3268f1bb72042131b"
+checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
 dependencies = [
  "unicode-ident",
 ]
@@ -842,7 +847,7 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 [[package]]
 name = "ratio"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/ratio.git#e3381d7b81e900071c168e73c778f77fb2b7be25"
+source = "git+https://github.com/Starry-OS/ratio.git#0c8da4c37e695a0052563f0d30909c9f29b5b572"
 
 [[package]]
 name = "raw-cpuid"
@@ -859,7 +864,7 @@ version = "11.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e29830cbb1290e404f24c73af91c5d8d631ce7e128691e9477556b540cd01ecd"
 dependencies = [
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
 ]
 
 [[package]]
@@ -887,9 +892,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "092474d1a01ea8278f69e6a358998405fae5b8b963ddaeb2b0b04a128bf1dfb0"
+checksum = "955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6"
 
 [[package]]
 name = "sbi-rt"
@@ -912,7 +917,7 @@ dependencies = [
 [[package]]
 name = "scheduler"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/scheduler.git#1142d1173d03c6d4ee141b6d1207f1c7c7cdf763"
+source = "git+https://github.com/Starry-OS/scheduler.git#036a029933b2cf4c030ef7ce10a11a786c53cd42"
 dependencies = [
  "linked_list",
 ]
@@ -925,22 +930,22 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "serde"
-version = "1.0.201"
+version = "1.0.203"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "780f1cebed1629e4753a1a38a3c72d30b97ec044f0aef68cb26650a3c5cf363c"
+checksum = "7253ab4de971e72fb7be983802300c30b5a7f0c2e56fab8abfc6a214307c0094"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.201"
+version = "1.0.203"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5e405930b9796f1c00bee880d03fc7e0bb4b9a11afc776885ffe84320da2865"
+checksum = "500cbc0ebeb6f46627f50f3f5811ccf6bf00643be300b4c3eabc0ef55dc5b5ba"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -959,12 +964,6 @@ dependencies = [
 
 [[package]]
 name = "spin"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
@@ -975,7 +974,7 @@ dependencies = [
 [[package]]
 name = "spinlock"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/spinlock.git#81ef766c064848b8bfae563c3b654dcaac80d719"
+source = "git+https://github.com/Starry-OS/spinlock.git#0149e52d3e4f21ea7bf9bb85f6fe7fc3702d4f1f"
 dependencies = [
  "cfg-if",
  "kernel_guard",
@@ -1019,9 +1018,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.63"
+version = "2.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf5be731623ca1a1fb7d8be6f261a3be6d3e2337b8a1f97be944d020c8fcb704"
+checksum = "901fa70d88b9d6c98022e23b4136f9f3e54e4662c3bc1bd1d84a42a9a0f0c1e9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1031,7 +1030,7 @@ dependencies = [
 [[package]]
 name = "taskctx"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/taskctx.git#7296a141dc1b72e19c60d602bf0be7f8fff7face"
+source = "git+https://github.com/Starry-OS/taskctx.git#86561d9659f294328350d0235e8f5d285fd6e766"
 dependencies = [
  "aarch64-cpu",
  "cfg-if",
@@ -1045,28 +1044,28 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.60"
+version = "1.0.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "579e9083ca58dd9dcf91a9923bb9054071b9ebbd800b342194c9feb0ee89fc18"
+checksum = "c546c80d6be4bc6a00c0f01730c08df82eaa7a7a61f11d656526506112cc1709"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.60"
+version = "1.0.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2470041c06ec3ac1ab38d0356a6119054dedaea53e12fbefc0de730a1c08524"
+checksum = "46c3384250002a6d5af4d114f2845d37b57521033f30d5c3f46c4d70e1197533"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]
 
 [[package]]
 name = "timer_list"
 version = "0.1.0"
-source = "git+https://github.com/Starry-OS/timer_list.git#0ba32228d9213c37f1715bcc5d9181bec5ecddc5"
+source = "git+https://github.com/Starry-OS/timer_list.git#1dc25aada896eaae1436bafceb1d31f13a59e491"
 
 [[package]]
 name = "tock-registers"
@@ -1076,9 +1075,9 @@ checksum = "696941a0aee7e276a165a978b37918fd5d22c55c3d6bda197813070ca9c0f21c"
 
 [[package]]
 name = "toml_datetime"
-version = "0.6.5"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3550f4e9685620ac18a50ed434eb3aec30db8ba93b0287467bca5826ea25baf1"
+checksum = "4badfd56924ae69bcc9039335b2e017639ce3f9b001c393c1b2d1ef846ce2cbf"
 
 [[package]]
 name = "toml_edit"
@@ -1099,9 +1098,9 @@ checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
 
 [[package]]
 name = "unicode-width"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68f5e5f3158ecfd4b8ff6fe086db7c8467a2dfdac97fe420f2b7c4aa97af66d6"
+checksum = "0336d538f7abc86d282a4189614dfaa90810dfc2c6f6427eaf88e16311dd225d"
 
 [[package]]
 name = "version_check"
@@ -1111,11 +1110,11 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "virtio-drivers"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff69e69ff755c004bb027891b58f951225832c84f6a734f9e1fdf0118aa91f91"
+checksum = "0e7f49914233c1d3b612f891e986b0c1e0e8a54d7076a0f2501a5e8a53e7054f"
 dependencies = [
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "log",
  "zerocopy",
 ]
@@ -1172,7 +1171,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96cb6fd45bfeab6a5055c5bffdb08768bd0c069f1d946debe585bbb380a7c062"
 dependencies = [
  "bit_field",
- "bitflags 2.5.0",
+ "bitflags 2.6.0",
  "rustversion",
  "volatile",
 ]
@@ -1210,5 +1209,5 @@ checksum = "15e934569e47891f7d9411f1a451d947a60e000ab3bd24fbb970f000387d1b3b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.63",
+ "syn 2.0.68",
 ]

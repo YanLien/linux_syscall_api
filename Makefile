@@ -17,10 +17,14 @@ endef
 
 
 doc_check_missing:
+	cargo update
+	cargo update --precise 0.4.19 log
 	$(call run_cmd,cargo doc,--no-deps --all-features --workspace)
 
 
 clippy:
+	cargo update
+	cargo update --precise 0.4.19 log
 ifeq ($(origin ARCH), command line)
 	cargo clippy --all-features --workspace --target $(TARGET)
 else
