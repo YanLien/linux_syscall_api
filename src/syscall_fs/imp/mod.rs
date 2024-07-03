@@ -31,10 +31,10 @@ pub fn solve_path(
     match deal_with_path(dir_fd, path_addr, force_dir) {
         Ok(path) => Ok(path),
         // Only invalid for file descriptor
-        Err(AxError::InvalidInput) => return Err(SyscallError::EBADF),
-        Err(AxError::NotFound) => return Err(SyscallError::ENOENT),
-        Err(AxError::NotADirectory) => return Err(SyscallError::ENOTDIR),
-        Err(AxError::BadAddress) => return Err(SyscallError::EFAULT),
-        Err(_) => return Err(SyscallError::EPERM),
+        Err(AxError::InvalidInput) => Err(SyscallError::EBADF),
+        Err(AxError::NotFound) => Err(SyscallError::ENOENT),
+        Err(AxError::NotADirectory) => Err(SyscallError::ENOTDIR),
+        Err(AxError::BadAddress) => Err(SyscallError::EFAULT),
+        Err(_) => Err(SyscallError::EPERM),
     }
 }

@@ -36,7 +36,7 @@ bitflags! {
     }
 }
 
-#[repr(C)]
+#[repr(packed(1))]
 #[derive(Debug, Clone, Copy)]
 /// 定义一个epoll事件
 pub struct EpollEvent {
@@ -92,7 +92,7 @@ impl EpollFile {
     pub fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
-            flags: Mutex::new(self.flags.lock().clone()),
+            flags: Mutex::new(*self.flags.lock()),
         }
     }
 
@@ -170,20 +170,18 @@ impl EpollFile {
                 let fd_table = current_process.fd_manager.fd_table.lock();
                 if let Some(file) = &fd_table[req_event.data as usize] {
                     let mut ret_event_type = EpollEventType::empty();
+                    // read unalign: copy the field contents to a local variable
+                    let req_type = req_event.event_type;
                     if file.is_hang_up() {
                         ret_event_type |= EpollEventType::EPOLLHUP;
                     }
                     if file.in_exceptional_conditions() {
                         ret_event_type |= EpollEventType::EPOLLERR;
                     }
-                    if file.ready_to_read()
-                        && req_event.event_type.contains(EpollEventType::EPOLLIN)
-                    {
+                    if file.ready_to_read() && req_type.contains(EpollEventType::EPOLLIN) {
                         ret_event_type |= EpollEventType::EPOLLIN;
                     }
-                    if file.ready_to_write()
-                        && req_event.event_type.contains(EpollEventType::EPOLLOUT)
-                    {
+                    if file.ready_to_write() && req_type.contains(EpollEventType::EPOLLOUT) {
                         ret_event_type |= EpollEventType::EPOLLOUT;
                     }
                     if !ret_event_type.is_empty() {
@@ -267,17 +265,17 @@ impl FileIO for EpollFile {
         for req_event in events.iter() {
             if let Some(file) = fd_table[req_event.data as usize].as_ref() {
                 let mut ret_event_type = EpollEventType::empty();
+                let req_type = req_event.event_type;
                 if file.is_hang_up() {
                     ret_event_type |= EpollEventType::EPOLLHUP;
                 }
                 if file.in_exceptional_conditions() {
                     ret_event_type |= EpollEventType::EPOLLERR;
                 }
-                if file.ready_to_read() && req_event.event_type.contains(EpollEventType::EPOLLIN) {
+                if file.ready_to_read() && req_type.contains(EpollEventType::EPOLLIN) {
                     ret_event_type |= EpollEventType::EPOLLIN;
                 }
-                if file.ready_to_write() && req_event.event_type.contains(EpollEventType::EPOLLOUT)
-                {
+                if file.ready_to_write() && req_type.contains(EpollEventType::EPOLLOUT) {
                     ret_event_type |= EpollEventType::EPOLLOUT;
                 }
                 if !ret_event_type.is_empty() {

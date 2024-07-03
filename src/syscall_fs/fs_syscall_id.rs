@@ -18,7 +18,7 @@ pub enum FsSyscallId {
     EVENTFD = 19,
     EPOLL_CREATE = 20,
     EPOLL_CTL = 21,
-    EPOLL_WAIT = 22,
+    EPOLL_PWAIT = 22,
     DUP = 23,
     DUP3 = 24,
     FCNTL64 = 25,
