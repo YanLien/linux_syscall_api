@@ -19,7 +19,7 @@ use crate::{
     syscall_fs::imp::solve_path, CloneArgs, RLimit, SyscallError, SyscallResult, TimeSecs,
     WaitFlags, RLIMIT_AS, RLIMIT_NOFILE, RLIMIT_STACK,
 };
-use axlog::{info, warn};
+use axlog::info;
 use axtask::TaskId;
 extern crate alloc;
 
@@ -209,10 +209,9 @@ pub fn syscall_clone3(args: [usize; 6]) -> SyscallResult {
     }
     let curr_process = current_process();
 
-    let args = match curr_process.manual_alloc_range_for_lazy(
-        (args[0] as usize).into(),
-        ((args[0] + size - 1) as usize).into(),
-    ) {
+    let args = match curr_process
+        .manual_alloc_range_for_lazy(args[0].into(), (args[0] + size - 1).into())
+    {
         Ok(_) => unsafe { &*(args[0] as *const CloneArgs) },
         Err(_) => return Err(SyscallError::EFAULT),
     };
@@ -576,7 +575,7 @@ pub fn syscall_arch_prctl(args: [usize; 6]) -> SyscallResult {
 /// To implement the fork syscall for x86_64
 #[cfg(target_arch = "x86_64")]
 pub fn syscall_fork() -> SyscallResult {
-    warn!("transfer syscall_fork to syscall_clone");
+    axlog::warn!("transfer syscall_fork to syscall_clone");
     let args = [1, 0, 0, 0, 0, 0];
     syscall_clone(args)
 }

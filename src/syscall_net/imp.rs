@@ -426,13 +426,11 @@ pub fn syscall_recvfrom(args: [usize; 6]) -> SyscallResult {
     let Some(socket) = file.as_any().downcast_ref::<Socket>() else {
         return Err(SyscallError::ENOTSOCK);
     };
-    info!("test");
-    if !addr_len.is_null() {
-        if curr.manual_alloc_type_for_lazy(addr_len).is_err() {
-            error!("[recvfrom()] addr_len address {addr_len:?} invalid");
-            return Err(SyscallError::EFAULT);
-        }
+    if !addr_len.is_null() && curr.manual_alloc_type_for_lazy(addr_len).is_err() {
+        error!("[recvfrom()] addr_len address {addr_len:?} invalid");
+        return Err(SyscallError::EFAULT);
     }
+
     if !addr_buf.is_null() && curr.manual_alloc_type_for_lazy(addr_buf).is_err() {
         return Err(SyscallError::EFAULT);
     }

@@ -41,6 +41,7 @@ pub enum TaskSyscallId {
     GETUID = 174,
     GETEUID = 175,
     GETGID = 176,
+    SETGID = 144,
     GETEGID = 177,
     GETTID = 178,
     SYSINFO = 179,
