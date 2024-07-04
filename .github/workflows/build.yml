@@ -29,8 +29,8 @@ jobs:
     - name: Clippy for aarch64
       run: make clippy ARCH=aarch64
     - name: Check code format
-      run: 
-        cargo update
+      run: | 
+        cargo update 
         cargo fmt --all -- --check
 
   build-external:
